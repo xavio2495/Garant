@@ -90,10 +90,13 @@ export function DashboardView() {
   const realTrades = data.Trade.filter((t) => !isDemo(t.taker));
   const bought = realTrades.reduce((acc, t) => acc + b(t.filledSize), 0n);
   const volume = realTrades.reduce((acc, t) => acc + (b(t.filledSize) * b(t.price)) / 10n ** 18n, 0n);
-  const paid = data.Redemption.filter((r) => !isDemo(r.account)).reduce(
-    (acc, r) => acc + (b(r.protectIn) * (payoutOf.get(r.series_id) ?? 0n)) / 10n ** 18n,
-    0n,
-  );
+  const paidTo = (keep: (account: string) => boolean) =>
+    data.Redemption.filter((r) => keep(r.account)).reduce(
+      (acc, r) => acc + (b(r.protectIn) * (payoutOf.get(r.series_id) ?? 0n)) / 10n ** 18n,
+      0n,
+    );
+  const paid = paidTo((a) => !isDemo(a));
+  const demoPaid = paidTo(isDemo);
   const accounts = new Set([...data.Account.map((a) => a.id), ...data.Trade.map((t) => t.taker)].map((a) => a.toLowerCase()));
   const realAccounts = [...accounts].filter((a) => !isDemo(a)).length;
   const demoTrades = data.Trade.length - realTrades.length;
@@ -124,7 +127,8 @@ export function DashboardView() {
       <p className="mt-3 max-w-[44rem] text-xs leading-relaxed text-muted">
         The last three figures leave out Garant demo wallets ({Object.entries(DEMO_WALLETS)
           .map(([a, name]) => `${name} ${short(a)}`)
-          .join(", ")}), which made {demoTrades} demo {demoTrades === 1 ? "purchase" : "purchases"}.
+          .join(", ")}), which made {demoTrades} demo {demoTrades === 1 ? "purchase" : "purchases"} and collected{" "}
+        {money(demoPaid)} in demo payouts.
         {meta
           ? ` Indexed to block ${meta.latest_processed_block.toLocaleString()} of ${meta.block_height.toLocaleString()}.`
           : null}
@@ -132,6 +136,7 @@ export function DashboardView() {
 
       <section className="mt-14">
         <h2 className="font-display text-2xl font-medium">By series</h2>
+        <p className="mt-2 text-sm text-muted">Every holder, including Garant demo wallets.</p>
         {series.length ? (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[40rem] text-left text-sm">
