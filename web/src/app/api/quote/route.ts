@@ -1,0 +1,28 @@
+import { listSeries, quote, sizeFxFloor } from "@/lib/garant";
+import { publicClient } from "@/lib/chain";
+import { fail, json } from "@/lib/json";
+import { referenceRate } from "@/lib/fx";
+
+// GET /api/quote?notionalUsd=200 quotes the open USD/PHP floor for a transfer.
+// GET /api/quote?seriesId=1&protectAmount=1000000 quotes any series directly.
+export async function GET(req: Request) {
+  const q = new URL(req.url).searchParams;
+  const all = await listSeries(publicClient);
+
+  if (q.has("notionalUsd")) {
+    const notionalUsd = Number(q.get("notionalUsd"));
+    if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be between 0 and 10000");
+    const s = all.find((x) => x.kind === "FX_FLOOR" && x.state === "OPEN");
+    if (!s) return fail(404, "No open exchange-rate guarantee right now");
+    const protectAmount = sizeFxFloor({ notionalUsd, strike: s.strike, lower: s.lower });
+    const [q2, reference] = await Promise.all([quote(publicClient, { seriesId: s.id, protectAmount }), referenceRate()]);
+    return json({ series: s, quote: q2, reference });
+  }
+
+  const id = q.get("seriesId");
+  const amount = q.get("protectAmount");
+  if (id === null || amount === null) return fail(400, "Pass notionalUsd, or seriesId and protectAmount");
+  const s = all.find((x) => x.id === BigInt(id));
+  if (!s) return fail(404, `Series ${id} not found`);
+  return json({ series: s, quote: await quote(publicClient, { seriesId: s.id, protectAmount: BigInt(amount) }) });
+}

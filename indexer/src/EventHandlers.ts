@@ -5,6 +5,22 @@ const KINDS = ["BINARY", "FX_FLOOR"] as const;
 const logId = (e: { chainId: number; block: { number: number }; logIndex: number }) =>
   `${e.chainId}_${e.block.number}_${e.logIndex}`;
 
+const STATS_ID = "global";
+
+async function bumpStats(context: any, delta: Partial<Record<"minted" | "setRedeemed" | "redeemedAusd" | "protectPaid" | "tradeVolume", bigint> & Record<"accounts" | "trades", number>>) {
+  const s = await context.Stats.get(STATS_ID);
+  context.Stats.set({
+    id: STATS_ID,
+    minted: (s?.minted ?? 0n) + (delta.minted ?? 0n),
+    setRedeemed: (s?.setRedeemed ?? 0n) + (delta.setRedeemed ?? 0n),
+    redeemedAusd: (s?.redeemedAusd ?? 0n) + (delta.redeemedAusd ?? 0n),
+    protectPaid: (s?.protectPaid ?? 0n) + (delta.protectPaid ?? 0n),
+    accounts: (s?.accounts ?? 0) + (delta.accounts ?? 0),
+    trades: (s?.trades ?? 0) + (delta.trades ?? 0),
+    tradeVolume: (s?.tradeVolume ?? 0n) + (delta.tradeVolume ?? 0n),
+  });
+}
+
 async function bumpAccount(
   context: any,
   account: string,
@@ -12,6 +28,7 @@ async function bumpAccount(
   redeemed: bigint,
 ) {
   const a = await context.Account.get(account);
+  if (!a) await bumpStats(context, { accounts: 1 });
   context.Account.set({
     id: account,
     mintedTotal: (a?.mintedTotal ?? 0n) + minted,
@@ -41,6 +58,10 @@ indexer.onEvent(
       observed: undefined,
       observedAt: undefined,
       settleBlock: undefined,
+      minted: 0n,
+      setRedeemed: 0n,
+      protectRedeemed: 0n,
+      protectPaid: 0n,
     });
   },
 );
@@ -76,6 +97,9 @@ indexer.onEvent(
       txHash: event.transaction.hash,
     });
     await bumpAccount(context, p.account, p.amount, 0n);
+    await bumpStats(context, { minted: p.amount });
+    const s = await context.Series.getOrThrow(p.id.toString());
+    context.Series.set({ ...s, minted: s.minted + p.amount });
   },
 );
 
@@ -93,6 +117,9 @@ indexer.onEvent(
       txHash: event.transaction.hash,
     });
     await bumpAccount(context, p.account, 0n, p.amount);
+    await bumpStats(context, { setRedeemed: p.amount });
+    const s = await context.Series.getOrThrow(p.id.toString());
+    context.Series.set({ ...s, setRedeemed: s.setRedeemed + p.amount });
   },
 );
 
@@ -143,6 +170,10 @@ indexer.onEvent(
       txHash: event.transaction.hash,
     });
     await bumpAccount(context, p.account, 0n, p.ausdOut);
+    const s = await context.Series.getOrThrow(p.id.toString());
+    const paid = (p.protectIn * s.payout) / 10n ** 18n;
+    context.Series.set({ ...s, protectRedeemed: s.protectRedeemed + p.protectIn, protectPaid: s.protectPaid + paid });
+    await bumpStats(context, { redeemedAusd: p.ausdOut, protectPaid: paid });
   },
 );
 
@@ -156,6 +187,21 @@ indexer.onEvent(
       outcome: Number(p.outcome),
       observedA: p.observedA,
       observedB: p.observedB,
+      finalizeAfter: p.finalizeAfter,
+    });
+  },
+);
+
+indexer.onEvent(
+  { contract: "CREFxResolver", event: "FxReportReceived" },
+  async ({ event, context }) => {
+    const p = event.params;
+    context.FxReport.set({
+      id: p.id.toString(),
+      series_id: p.id.toString(),
+      outcome: Number(p.outcome),
+      rateA: p.rateA,
+      rateB: p.rateB,
       finalizeAfter: p.finalizeAfter,
     });
   },
@@ -179,5 +225,6 @@ indexer.onEvent(
       timestamp: event.block.timestamp,
       txHash: event.transaction.hash,
     });
+    await bumpStats(context, { trades: 1, tradeVolume: (p.filledSize * p.price) / 10_000n });
   },
 );

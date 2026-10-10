@@ -15,6 +15,10 @@ contracts:
     handler: src/EventHandlers.ts
     events:
       - event: "ReportReceived(uint256 indexed id, uint8 outcome, int64 observedA, int64 observedB, uint64 finalizeAfter)"
+  - name: CREFxResolver
+    handler: src/EventHandlers.ts
+    events:
+      - event: "FxReportReceived(uint256 indexed id, uint8 outcome, int64 rateA, int64 rateB, uint64 finalizeAfter)"
   - name: KuruMarket
     handler: src/EventHandlers.ts
     events:
@@ -33,6 +37,8 @@ chains:
         address: "0x0000000000000000000000000000000000000001"
       - name: CREResolver
         address: "0x0000000000000000000000000000000000000002"
+      - name: CREFxResolver
+        address: "0x0000000000000000000000000000000000000003"
       - name: KuruMarket
 field_selection:
   transaction_fields:
