@@ -1,0 +1,21 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["dependencies"]
+solc = "0.8.28"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+fs_permissions = [{ access = "write", path = "../deployments" }]
+
+[soldeer]
+remappings_generate = false
+remappings_regenerate = false
+
+[rpc_endpoints]
+monad = "https://testnet-rpc.monad.xyz"
+
+[dependencies]
+forge-std = "1.11.0"
+"@openzeppelin-contracts" = "5.4.0"
+"@pythnetwork-pyth-sdk-solidity" = "4.1.0"

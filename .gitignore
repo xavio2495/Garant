@@ -1,0 +1,27 @@
+# docs and research stay local
+*.md
+!/README.md
+claude-docs/
+prior/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# deps and build output
+node_modules/
+.pnpm-store/
+contracts/out/
+contracts/dependencies/
+contracts/cache/
+contracts/broadcast/**/dry-run/
+.next/
+web/out/
+indexer/generated/
+indexer/build/
+cre/**/tmp/
+cre/**/.cre_build_tmp.js
+*.wasm
+*.log
+.DS_Store
