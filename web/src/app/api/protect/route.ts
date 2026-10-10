@@ -10,7 +10,7 @@ import { MAX_AUSD_PER_REQUEST, PolicyError, capMessage, partnerAddress, partnerW
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { notionalUsd?: number; beneficiary?: string };
   const notionalUsd = Number(body.notionalUsd);
-  if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be between 0 and 10000");
+  if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be greater than 0 and at most 10000");
   if (body.beneficiary !== undefined && !isAddress(body.beneficiary)) return fail(400, "beneficiary must be an address");
   const partner = partnerAddress();
   if (!partner) return fail(503, "Partner wallet is not configured");

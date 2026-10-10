@@ -97,7 +97,7 @@ const OUTCOME = ["Dry enough. No payout.", "It rained. Pays in full.", "Sources 
 function Result({ series, report }: { series: SeriesView; report?: Report }) {
   if (series.state === "OPEN") {
     if (!report) return <span className="text-muted">Waiting for both weather services to publish.</span>;
-    const final = new Date(Number(report.finalizeAfter) * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    const final = `${new Date(Number(report.finalizeAfter) * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC`;
     return (
       <span>
         {OUTCOME[report.outcome]} <span className="text-muted">Final after a review window ending {final}.</span>

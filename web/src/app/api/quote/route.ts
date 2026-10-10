@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
   if (q.has("notionalUsd")) {
     const notionalUsd = Number(q.get("notionalUsd"));
-    if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be between 0 and 10000");
+    if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be greater than 0 and at most 10000");
     const s = openUsdPhpSeries(all);
     if (!s) return fail(404, "No open exchange-rate guarantee right now");
     const protectAmount = sizeFxFloor({ notionalUsd: BigInt(Math.round(notionalUsd * 1e6)), strike: s.strike, lower: s.lower });
@@ -26,6 +26,7 @@ export async function GET(req: Request) {
   const id = q.get("seriesId");
   const amount = q.get("protectAmount");
   if (id === null || amount === null) return fail(400, "Pass notionalUsd, or seriesId and protectAmount");
+  if (!/^\d+$/.test(id) || !/^\d+$/.test(amount)) return fail(400, "seriesId and protectAmount must be whole numbers");
   const s = all.find((x) => x.id === BigInt(id));
   if (!s) return fail(404, `Series ${id} not found`);
   try {

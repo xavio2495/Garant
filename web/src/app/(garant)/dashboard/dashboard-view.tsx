@@ -26,10 +26,13 @@ type SeriesRow = {
   protectRedeemed: string;
   protectPaid: string;
   payout: string;
+  expiry: string;
   observedAt: string | null;
   resolvedAt: number | null;
   settleBlock: number | null;
 };
+
+type Report = { id: string; receivedAt: number; receivedBlock: number; finalizeAfter: string };
 
 type Activity = { id: string; series_id: string; account: string; amount: string; timestamp: number; txHash: string };
 
@@ -38,6 +41,8 @@ type Data = {
   Account: { id: string }[];
   Trade: { taker: string; price: string; filledSize: string }[];
   Redemption: { account: string; series_id: string; protectIn: string }[];
+  WeatherReport: Report[];
+  FxReport: Report[];
   Series: SeriesRow[];
   Mint: Activity[];
   chain_metadata: { block_height: number; latest_processed_block: number }[];
@@ -45,10 +50,12 @@ type Data = {
 
 const QUERY = `{
   Stats(where: { id: { _eq: "global" } }) { minted setRedeemed redeemedAusd protectPaid accounts trades tradeVolume }
-  Series { id kind state label minted setRedeemed protectRedeemed protectPaid payout observedAt resolvedAt settleBlock }
+  Series { id kind state label minted setRedeemed protectRedeemed protectPaid payout expiry observedAt resolvedAt settleBlock }
   Account(limit: 1000) { id }
   Trade(limit: 1000) { taker price filledSize }
   Redemption(limit: 1000) { account series_id protectIn }
+  WeatherReport { id receivedAt receivedBlock finalizeAfter }
+  FxReport { id receivedAt receivedBlock finalizeAfter }
   Mint(order_by: { block: desc }, limit: 8) { id series_id account amount timestamp txHash }
   chain_metadata { block_height latest_processed_block }
 }`;
@@ -57,6 +64,9 @@ const b = (v: string | undefined) => BigInt(v ?? "0");
 const money = (v: bigint) => usd(toNum6(v));
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const STATE = { OPEN: "Open", RESOLVED: "Settled", VOIDED: "Voided" };
+const dur = (sec: number) => (sec < 120 ? `${sec} s` : `${Math.floor(sec / 60)} min ${sec % 60} s`);
+const clock = (unix: number) =>
+  `${new Date(unix * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" })} UTC`;
 
 export function DashboardView() {
   const { data, isLoading } = useQuery({
@@ -130,8 +140,7 @@ export function DashboardView() {
                   <th className="py-2 pr-4 font-normal">Series</th>
                   <th className="py-2 pr-4 font-normal">State</th>
                   <th className="py-2 pr-4 text-right font-normal">Outstanding</th>
-                  <th className="py-2 pr-4 text-right font-normal">Paid out</th>
-                  <th className="py-2 text-right font-normal">Data to settlement</th>
+                  <th className="py-2 text-right font-normal">Paid out</th>
                 </tr>
               </thead>
               <tbody>
@@ -140,10 +149,7 @@ export function DashboardView() {
                     <td className="py-3 pr-4">{r.label}</td>
                     <td className="py-3 pr-4">{STATE[r.state]}</td>
                     <td className="py-3 pr-4 text-right">{money(outstanding(r))}</td>
-                    <td className="py-3 pr-4 text-right">{money(b(r.protectPaid))}</td>
-                    <td className="py-3 text-right">
-                      {r.resolvedAt && r.observedAt ? `${r.resolvedAt - Number(r.observedAt)} s` : "–"}
-                    </td>
+                    <td className="py-3 text-right">{money(b(r.protectPaid))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -153,6 +159,8 @@ export function DashboardView() {
           <p className="mt-3 text-muted">No series on chain yet. They appear here as soon as they&apos;re created.</p>
         )}
       </section>
+
+      <SettlementSpeed series={series} reports={[...data.WeatherReport, ...data.FxReport]} />
 
       <section className="mt-14">
         <h2 className="font-display text-2xl font-medium">Latest money locked</h2>
@@ -165,7 +173,7 @@ export function DashboardView() {
                   {isDemo(m.account) ? <span className="ml-2 rounded bg-floor-soft px-1.5 py-0.5 text-xs">Garant demo wallet</span> : null}
                 </span>
                 <a href={explorerTx(m.txHash)} target="_blank" rel="noreferrer" className="text-garant underline underline-offset-4">
-                  {new Date(m.timestamp * 1000).toLocaleString("en-GB")}
+                  {new Date(m.timestamp * 1000).toLocaleString("en-GB", { timeZone: "UTC" })} UTC
                 </a>
               </li>
             ))}
@@ -175,5 +183,76 @@ export function DashboardView() {
         )}
       </section>
     </>
+  );
+}
+
+function SettlementSpeed({ series, reports }: { series: SeriesRow[]; reports: Report[] }) {
+  const byId = new Map(reports.map((r) => [r.id, r]));
+  const rows = series
+    .map((s) => ({ s, r: byId.get(s.id) }))
+    .filter(({ s, r }) => r || s.state !== "OPEN");
+  if (!rows.length) return null;
+
+  return (
+    <section className="mt-14">
+      <h2 className="font-display text-2xl font-medium">Settlement speed</h2>
+      <p className="mt-2 max-w-[40rem] text-sm leading-relaxed text-muted">
+        From a series&apos; expiry, to outside data landing on chain, to the moment payouts can be collected. Weather and exchange-rate
+        results wait out a review window first, so anyone can flag a bad report. The last column is how quickly
+        settlement follows once that window closes.
+      </p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[54rem] text-left text-sm">
+          <thead className="text-muted">
+            <tr className="border-b border-rule">
+              <th className="py-2 pr-4 font-normal">Series</th>
+              <th className="py-2 pr-4 text-right font-normal">Expiry to data</th>
+              <th className="py-2 pr-4 font-normal">Data on chain</th>
+              <th className="py-2 pr-4 font-normal">Review window</th>
+              <th className="py-2 pr-4 font-normal">Final</th>
+              <th className="py-2 pr-4 text-right font-normal">Data to final</th>
+              <th className="py-2 text-right font-normal">After window</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ s, r }) => {
+              const dataAt = r ? r.receivedAt : Number(s.observedAt ?? 0);
+              const windowEnd = r ? Number(r.finalizeAfter) : dataAt;
+              const blocks = r && s.settleBlock ? s.settleBlock - r.receivedBlock : null;
+              return (
+                <tr key={s.id} className="border-b border-rule align-top">
+                  <td className="py-3 pr-4">{s.label}</td>
+                  <td className="py-3 pr-4 text-right">{dataAt ? dur(Math.max(dataAt - Number(s.expiry), 0)) : "–"}</td>
+                  <td className="py-3 pr-4">
+                    {dataAt ? clock(dataAt) : "–"}
+                    <span className="block text-xs text-muted">
+                      {r ? `block ${r.receivedBlock.toLocaleString()}` : "price published"}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4">{r ? dur(windowEnd - r.receivedAt) : "None"}</td>
+                  <td className="py-3 pr-4">
+                    {s.resolvedAt ? (
+                      <>
+                        {clock(s.resolvedAt)}
+                        {s.settleBlock ? <span className="block text-xs text-muted">block {s.settleBlock.toLocaleString()}</span> : null}
+                      </>
+                    ) : (
+                      <span className="text-muted">After {clock(windowEnd)}</span>
+                    )}
+                  </td>
+                  <td className="py-3 pr-4 text-right">
+                    {s.resolvedAt && dataAt ? dur(s.resolvedAt - dataAt) : "–"}
+                    {blocks !== null ? <span className="block text-xs text-muted">{blocks.toLocaleString()} blocks</span> : null}
+                  </td>
+                  <td className="py-3 text-right font-medium">
+                    {s.resolvedAt ? dur(Math.max(s.resolvedAt - windowEnd, 0)) : "–"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

@@ -78,6 +78,8 @@ type WeatherReport {
   observedA: BigInt!
   observedB: BigInt!
   finalizeAfter: BigInt!
+  receivedAt: Int!
+  receivedBlock: Int!
 }
 
 type FxReport {
@@ -87,6 +89,8 @@ type FxReport {
   rateA: BigInt!
   rateB: BigInt!
   finalizeAfter: BigInt!
+  receivedAt: Int!
+  receivedBlock: Int!
 }
 
 type Market {

@@ -23,17 +23,18 @@ export const kuruOrderBookAbi = [
     ],
     outputs: [{ type: 'uint256' }],
   },
+  // event layouts as emitted by the deployed OrderBook: nothing indexed, Trade price at 1e18
   {
     type: 'event',
     name: 'Trade',
     inputs: [
       { name: 'orderId', type: 'uint40', indexed: false },
-      { name: 'maker', type: 'address', indexed: true },
+      { name: 'makerAddress', type: 'address', indexed: false },
       { name: 'isBuy', type: 'bool', indexed: false },
-      { name: 'price', type: 'uint32', indexed: false },
+      { name: 'price', type: 'uint256', indexed: false },
       { name: 'updatedSize', type: 'uint96', indexed: false },
-      { name: 'taker', type: 'address', indexed: true },
-      { name: 'origin', type: 'address', indexed: true },
+      { name: 'takerAddress', type: 'address', indexed: false },
+      { name: 'txOrigin', type: 'address', indexed: false },
       { name: 'filledSize', type: 'uint96', indexed: false },
     ],
   },
@@ -41,8 +42,8 @@ export const kuruOrderBookAbi = [
     type: 'event',
     name: 'OrderCreated',
     inputs: [
-      { name: 'orderId', type: 'uint40', indexed: true },
-      { name: 'owner', type: 'address', indexed: true },
+      { name: 'orderId', type: 'uint40', indexed: false },
+      { name: 'owner', type: 'address', indexed: false },
       { name: 'size', type: 'uint96', indexed: false },
       { name: 'price', type: 'uint32', indexed: false },
       { name: 'isBuy', type: 'bool', indexed: false },
@@ -50,13 +51,10 @@ export const kuruOrderBookAbi = [
   },
   {
     type: 'event',
-    name: 'OrderCanceled',
+    name: 'OrdersCanceled',
     inputs: [
-      { name: 'orderId', type: 'uint40', indexed: true },
-      { name: 'owner', type: 'address', indexed: true },
-      { name: 'size', type: 'uint96', indexed: false },
-      { name: 'price', type: 'uint32', indexed: false },
-      { name: 'isBuy', type: 'bool', indexed: false },
+      { name: 'orderId', type: 'uint40[]', indexed: false },
+      { name: 'owner', type: 'address', indexed: false },
     ],
   },
 ] as const;

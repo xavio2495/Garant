@@ -188,6 +188,8 @@ indexer.onEvent(
       observedA: p.observedA,
       observedB: p.observedB,
       finalizeAfter: p.finalizeAfter,
+      receivedAt: event.block.timestamp,
+      receivedBlock: event.block.number,
     });
   },
 );
@@ -203,6 +205,8 @@ indexer.onEvent(
       rateA: p.rateA,
       rateB: p.rateB,
       finalizeAfter: p.finalizeAfter,
+      receivedAt: event.block.timestamp,
+      receivedBlock: event.block.number,
     });
   },
 );

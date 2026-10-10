@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FloorLine } from "@/components/floor-line";
+import { LiveProof } from "@/components/live-proof";
 
 const USES = [
   {
@@ -31,6 +32,7 @@ export default function Home() {
             Garant sells guaranteed minimum outcomes on exchange rates and weather. Each guarantee is fully funded
             up front and settles on its own from public data.
           </p>
+          <LiveProof />
         </div>
         <FloorLine className="w-full" />
       </section>
