@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: garant
+contracts:
+  - name: OutcomeSeries
+    handler: src/EventHandlers.ts
+    events:
+      - event: "SeriesCreated(uint256 indexed id, uint8 kind, address resolver, bytes32 oracleRef, int64 strike, int64 lower, uint64 expiry, address protect, address back, string label)"
+      - event: "MarketSet(uint256 indexed id, address market)"
+      - event: "Minted(uint256 indexed id, address indexed account, uint256 amount)"
+      - event: "SetRedeemed(uint256 indexed id, address indexed account, uint256 amount)"
+      - event: "Resolved(uint256 indexed id, uint256 payout, int64 observed, uint64 observedAt)"
+      - event: "Voided(uint256 indexed id)"
+      - event: "Redeemed(uint256 indexed id, address indexed account, uint256 protectIn, uint256 backIn, uint256 ausdOut)"
+  - name: CREResolver
+    handler: src/EventHandlers.ts
+    events:
+      - event: "ReportReceived(uint256 indexed id, uint8 outcome, int64 observedA, int64 observedB, uint64 finalizeAfter)"
+  - name: KuruMarket
+    handler: src/EventHandlers.ts
+    events:
+      - event: "Trade(uint40 orderId, address indexed maker, bool isBuy, uint32 price, uint96 updatedSize, address indexed taker, address indexed origin, uint96 filledSize)"
+chains:
+  - id: 10143
+    start_block: 0
+    # HyperSync (needs ENVIO_API_TOKEN) by default; set ENVIO_RPC_FOR=sync to index over RPC only
+    rpc:
+      - url: https://testnet-rpc.monad.xyz
+        for: ${ENVIO_RPC_FOR:-fallback}
+        initial_block_interval: 100
+        interval_ceiling: 100
+    contracts:
+      - name: OutcomeSeries
+        address: "0x0000000000000000000000000000000000000001"
+      - name: CREResolver
+        address: "0x0000000000000000000000000000000000000002"
+      - name: KuruMarket
+field_selection:
+  transaction_fields:
+    - hash

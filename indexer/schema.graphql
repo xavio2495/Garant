@@ -1,0 +1,96 @@
+enum SeriesKind {
+  BINARY
+  FX_FLOOR
+}
+
+enum SeriesState {
+  OPEN
+  RESOLVED
+  VOIDED
+}
+
+type Series {
+  id: ID!
+  kind: SeriesKind!
+  state: SeriesState!
+  label: String!
+  strike: BigInt!
+  lower: BigInt!
+  expiry: BigInt!
+  protect: String!
+  back: String!
+  market: String
+  payout: BigInt!
+  resolver: String!
+  createdAt: Int!
+  resolvedAt: Int
+  observed: BigInt
+  observedAt: BigInt
+  settleBlock: Int
+}
+
+type Mint {
+  id: ID!
+  series: Series!
+  account: String!
+  amount: BigInt!
+  block: Int!
+  timestamp: Int!
+  txHash: String!
+}
+
+type SetRedeem {
+  id: ID!
+  series: Series!
+  account: String!
+  amount: BigInt!
+  block: Int!
+  timestamp: Int!
+  txHash: String!
+}
+
+type Redemption {
+  id: ID!
+  series: Series!
+  account: String!
+  protectIn: BigInt!
+  backIn: BigInt!
+  ausdOut: BigInt!
+  block: Int!
+  timestamp: Int!
+  txHash: String!
+}
+
+type Account {
+  id: ID!
+  mintedTotal: BigInt!
+  redeemedTotal: BigInt!
+}
+
+type WeatherReport {
+  id: ID!
+  series: Series!
+  outcome: Int!
+  observedA: BigInt!
+  observedB: BigInt!
+  finalizeAfter: BigInt!
+}
+
+type Market {
+  id: ID!
+  series: Series!
+}
+
+type Trade {
+  id: ID!
+  series: Series!
+  market: String!
+  maker: String!
+  taker: String!
+  isBuy: Boolean!
+  price: BigInt!
+  filledSize: BigInt!
+  block: Int!
+  timestamp: Int!
+  txHash: String!
+}

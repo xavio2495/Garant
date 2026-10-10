@@ -1,0 +1,16 @@
+{
+  "name": "@garant/indexer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "set -a; [ -f ../.env ] && . ../.env; set +a; envio dev",
+    "start": "set -a; [ -f ../.env ] && . ../.env; set +a; envio start"
+  },
+  "dependencies": {
+    "envio": "3.14.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
