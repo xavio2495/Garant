@@ -78,15 +78,15 @@ for (const s of series) {
 console.log('\nSettlement (report→settle includes the 600 s challenge window)');
 console.table(rows);
 
-// gas per step: first observed transaction of each kind
+// gas per step: latest transaction of each kind
 const steps = {
-  mint: minted[0]?.transactionHash,
-  'protect (Kuru market buy)': trades[0]?.transactionHash,
-  'weather report (CRE)': weather[0]?.transactionHash,
-  'fx report (CRE)': fx[0]?.transactionHash,
-  'finalize → settle': resolved.find((l) => reports.has(l.args.id))?.transactionHash,
-  'pyth resolve': resolved.find((l) => !reports.has(l.args.id))?.transactionHash,
-  redeem: redeemed[0]?.transactionHash,
+  mint: minted.at(-1)?.transactionHash,
+  'protect (Kuru market buy)': trades.at(-1)?.transactionHash,
+  'weather report (CRE)': weather.at(-1)?.transactionHash,
+  'fx report (CRE)': fx.at(-1)?.transactionHash,
+  'finalize → settle': resolved.findLast((l) => reports.has(l.args.id))?.transactionHash,
+  'pyth resolve': resolved.findLast((l) => !reports.has(l.args.id))?.transactionHash,
+  redeem: redeemed.at(-1)?.transactionHash,
 };
 const gasPrice = await client.getGasPrice();
 const monUsd = process.env.MON_USD ? Number(process.env.MON_USD) : null;
