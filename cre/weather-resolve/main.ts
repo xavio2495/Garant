@@ -42,6 +42,10 @@ const KIND_BINARY = 0;
 const KIND_FX_FLOOR = 1;
 const STATE_OPEN = 0;
 const MAX_REPORTS_PER_RUN = 5;
+// Chain reads allowed per execution by the CRE runtime.
+const MAX_READS = 15;
+// Reads one candidate can cost: series, pending, spec.
+const READS_PER_SERIES = 3;
 const GAS_LIMIT = "500000";
 
 const outcomeSeriesAbi = parseAbi([
@@ -94,7 +98,9 @@ export const onCronTrigger = (runtime: Runtime<Config>): string => {
   const evm = new EVMClient(network.chainSelector.selector);
   const http = new HTTPClient();
 
+  let reads = 0;
   const read = (to: string, abi: Abi, functionName: string, args: readonly unknown[] = []): any => {
+    reads++;
     const res = evm
       .callContract(runtime, {
         call: encodeCallMsg({ from: zeroAddress, to: to as Address, data: encodeFunctionData({ abi, functionName, args }) }),
@@ -108,7 +114,7 @@ export const onCronTrigger = (runtime: Runtime<Config>): string => {
   const count: bigint = read(outcomeSeries, outcomeSeriesAbi, "seriesCount");
   let reported = 0;
 
-  for (let id = 0n; id < count && reported < MAX_REPORTS_PER_RUN; id++) {
+  for (let id = 0n; id < count && reported < MAX_REPORTS_PER_RUN && reads + READS_PER_SERIES <= MAX_READS; id++) {
     const s = read(outcomeSeries, outcomeSeriesAbi, "series", [id]);
     if (s.state !== STATE_OPEN || s.expiry > now) continue;
     const resolver = s.resolver.toLowerCase();
@@ -118,10 +124,10 @@ export const onCronTrigger = (runtime: Runtime<Config>): string => {
     let a: bigint;
     let b: bigint;
     if (s.kind === KIND_BINARY && resolver === creResolver.toLowerCase()) {
-      const [lat1e4, lon1e4, yyyymmdd, registered] = read(creResolver, creResolverAbi, "spec", [id]);
-      if (!registered) continue;
       const [exists] = read(creResolver, creResolverAbi, "pending", [id]);
       if (exists) continue;
+      const [lat1e4, lon1e4, yyyymmdd, registered] = read(creResolver, creResolverAbi, "spec", [id]);
+      if (!registered) continue;
 
       const spec: WeatherSpec = { lat1e4, lon1e4, yyyymmdd };
       const obs = http
@@ -134,10 +140,10 @@ export const onCronTrigger = (runtime: Runtime<Config>): string => {
       }
       [receiver, outcome, a, b] = [creResolver, d.outcome, d.observedA, d.observedB];
     } else if (s.kind === KIND_FX_FLOOR && resolver === creFxResolver.toLowerCase()) {
-      const [pair, yyyymmdd, registered] = read(creFxResolver, creFxResolverAbi, "spec", [id]);
-      if (!registered) continue;
       const [exists] = read(creFxResolver, creFxResolverAbi, "pending", [id]);
       if (exists) continue;
+      const [pair, yyyymmdd, registered] = read(creFxResolver, creFxResolverAbi, "spec", [id]);
+      if (!registered) continue;
 
       const spec: FxSpec = { ...decodePair(pair), yyyymmdd };
       const obs = http

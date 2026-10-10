@@ -1,8 +1,8 @@
 {
   "schedule": "*/30 * * * * *",
   "chainName": "monad-testnet",
-  "outcomeSeries": "0x0000000000000000000000000000000000000000",
-  "creResolver": "0x0000000000000000000000000000000000000000",
-  "creFxResolver": "0x0000000000000000000000000000000000000000",
+  "outcomeSeries": "0xF86CdAeE90DB9901a5F104172294161085070C5A",
+  "creResolver": "0xA5dCB9B329b17253FF35202dEb7a2093d06fd7b0",
+  "creFxResolver": "0x987bf40239A6641C7B9c4E791d48e5CC5ddEa86c",
   "fxTolBps": 50
 }
