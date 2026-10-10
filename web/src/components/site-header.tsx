@@ -36,9 +36,7 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto text-sm">
           {!auth.enabled ? (
-            <span className="text-muted" title="Set NEXT_PUBLIC_PRIVY_APP_ID to enable sign-in">
-              Sign-in not configured
-            </span>
+            <span className="text-muted">Install a browser wallet to sign in</span>
           ) : auth.signedIn ? (
             <button onClick={auth.signOut} className="rounded-full border border-rule px-3 py-1.5 hover:border-ink">
               {auth.address ? short(auth.address) : "Signed in"} · Sign out

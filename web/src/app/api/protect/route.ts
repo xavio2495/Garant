@@ -1,7 +1,38 @@
-import { fail } from "@/lib/json";
+import { isAddress, type Address } from "viem";
+import { listSeries, openUsdPhpSeries, protect, quote, sizeFxFloor } from "@/lib/garant";
+import { publicClient } from "@/lib/chain";
+import { fail, json } from "@/lib/json";
+import { MAX_AUSD_PER_REQUEST, PolicyError, capMessage, partnerAddress, partnerWallet } from "@/lib/partner-wallet";
 
-// Buys protection from the partner's server wallet. Wired once the partner
-// wallet (with its spending policy) and the contracts are live.
-export async function POST() {
-  return fail(503, "Guarantees can't be bought yet. The service is being set up.");
+// POST { notionalUsd, beneficiary? } buys a USD/PHP rate guarantee from the
+// partner's wallet. Without a beneficiary the partner holds it and claims for
+// the recipient.
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => ({}))) as { notionalUsd?: number; beneficiary?: string };
+  const notionalUsd = Number(body.notionalUsd);
+  if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be between 0 and 10000");
+  if (body.beneficiary !== undefined && !isAddress(body.beneficiary)) return fail(400, "beneficiary must be an address");
+  const partner = partnerAddress();
+  if (!partner) return fail(503, "Partner wallet is not configured");
+  const beneficiary = (body.beneficiary ?? partner) as Address;
+
+  const series = openUsdPhpSeries(await listSeries(publicClient));
+  if (!series) return fail(404, "No open exchange-rate guarantee right now");
+  const protectAmount = sizeFxFloor({ notionalUsd: BigInt(Math.round(notionalUsd * 1e6)), strike: series.strike, lower: series.lower });
+
+  let q;
+  try {
+    q = await quote(publicClient, { seriesId: series.id, protectAmount });
+  } catch (e) {
+    return fail(409, `Not enough offers to price this guarantee: ${(e as Error).message}`);
+  }
+  if (q.costAusd > MAX_AUSD_PER_REQUEST) return fail(403, capMessage(q.costAusd));
+
+  try {
+    const txs = await protect(partnerWallet(series, beneficiary), { quote: q, beneficiary, maxCostAusd: MAX_AUSD_PER_REQUEST });
+    return json({ seriesId: series.id, protectAmount, costAusd: q.costAusd, beneficiary, txs });
+  } catch (e) {
+    if (e instanceof PolicyError) return fail(403, e.message);
+    return fail(502, `Purchase failed: ${(e as Error).message}`);
+  }
 }

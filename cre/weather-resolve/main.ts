@@ -46,7 +46,8 @@ const MAX_REPORTS_PER_RUN = 5;
 const MAX_READS = 15;
 // Reads one candidate can cost: series, pending, spec.
 const READS_PER_SERIES = 3;
-const GAS_LIMIT = "500000";
+// Measured: a report costs about 141k gas end to end; Monad bills the limit, so keep headroom small.
+const GAS_LIMIT = "200000";
 
 const outcomeSeriesAbi = parseAbi([
   "struct Series { uint8 kind; uint8 state; address resolver; bytes32 oracleRef; int64 strike; int64 lower; uint64 expiry; address protect; address back; address market; uint128 payout; }",

@@ -18,6 +18,7 @@ export function SendForm() {
   const [amount, setAmount] = useState(200);
   const [guarantee, setGuarantee] = useState(true);
   const [data, setData] = useState<QuoteResponse | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const [stage, setStage] = useState<Stage>({ kind: "form" });
 
   useEffect(() => {
@@ -25,8 +26,10 @@ export function SendForm() {
     const ctrl = new AbortController();
     const t = setTimeout(() => {
       fetch(`/api/quote?notionalUsd=${amount}`, { signal: ctrl.signal })
-        .then((r) => (r.ok ? r.json() : null))
-        .then(setData)
+        .then(async (r) => {
+          setUnavailable(!r.ok);
+          setData(r.ok ? await r.json() : null);
+        })
         .catch(() => {});
     }, 300);
     return () => {
@@ -39,19 +42,25 @@ export function SendForm() {
   const lower = data ? fx8(BigInt(data.series.lower)) : null;
   const fee = data ? toNum6(BigInt(data.quote.costAusd)) : null;
   const rate = data?.reference?.rate ?? null;
-  const total = amount + (guarantee && fee ? fee : 0);
+  const withGuarantee = guarantee && !unavailable;
+  const total = amount + (withGuarantee && fee ? fee : 0);
 
   async function send() {
     setStage({ kind: "sending" });
-    if (!guarantee) return setStage({ kind: "sent", guaranteed: false });
+    if (!withGuarantee) return setStage({ kind: "sent", guaranteed: false });
     const r = await fetch("/api/protect", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ notionalUsd: amount, seriesId: data?.series.id }),
+      body: JSON.stringify({ notionalUsd: amount }),
     });
     if (r.ok) return setStage({ kind: "sent", guaranteed: true });
-    const j = await r.json().catch(() => ({}));
-    setStage({ kind: "error", message: j.error ?? "The guarantee could not be added. Your money has not been sent." });
+    setStage({
+      kind: "error",
+      message:
+        r.status === 403
+          ? "This transfer is above the guarantee limit set by Hatid. Try a smaller amount, or send without the guarantee."
+          : "The guarantee couldn't be added just now. Nothing was sent. Try again, or send without the guarantee.",
+    });
   }
 
   if (stage.kind === "sent") {
@@ -107,6 +116,11 @@ export function SendForm() {
         )}
       </p>
 
+      {unavailable ? (
+        <p className="mt-8 rounded-2xl border-2 border-rule p-5 text-sm leading-relaxed text-muted">
+          Rate guarantees aren&apos;t available for this amount right now. You can still send the money without one.
+        </p>
+      ) : (
       <div
         className={`mt-8 rounded-2xl border-2 p-5 transition-colors ${guarantee ? "border-floor bg-floor-soft/50" : "border-rule"}`}
       >
@@ -135,6 +149,7 @@ export function SendForm() {
           </>
         ) : null}
       </div>
+      )}
 
       {stage.kind === "error" ? (
         <p role="alert" className="mt-6 rounded-xl bg-alert/10 p-4 text-sm text-alert">
@@ -144,7 +159,7 @@ export function SendForm() {
 
       <button
         onClick={send}
-        disabled={!(amount > 0) || stage.kind === "sending" || (guarantee && fee === null)}
+        disabled={!(amount > 0) || stage.kind === "sending" || (withGuarantee && fee === null)}
         className="mt-8 w-full rounded-full bg-ink py-4 text-lg font-medium text-paper disabled:opacity-40"
       >
         {stage.kind === "sending" ? "Sending…" : `Send ${usd(total)}`}

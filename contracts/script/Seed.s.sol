@@ -31,6 +31,8 @@ interface IKuruRouter {
 ///   ad hoc:   --sig "fx(uint32,int64,int64,uint64,string)" 20261009 6250000000 6000000000 <expiry> "USD/PHP 62.50"
 ///             --sig "rain(int32,int32,uint32,int64,uint64,string)" 145995 1209842 20260910 1000 <expiry> "Manila rain"
 ///             --sig "pyth(bytes32,int64,int64,uint64,string)" <priceId> <K> <L> <expiry> "BTC floor"
+///   demo day: --sig "demoFx(int64,int64)" 6250000000 6000000000
+///             USD/PHP floor on the latest weekday fixing (UTC), expiring in SEED_DELAY seconds
 contract Seed is Script {
     bytes32 constant USD_PHP = bytes32("USD/PHP");
     bytes32 constant BTC_USD = 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
@@ -75,6 +77,21 @@ contract Seed is Script {
         if (vm.envOr("SEED_BTC", false)) {
             _pyth(BTC_USD, 80_000e8, 75_000e8, soon, "BTC/USD 80000 floor"); // 6
         }
+        vm.stopBroadcast();
+    }
+
+    function demoFx(int64 strike, int64 lower) external {
+        _load();
+        uint256 day = block.timestamp / 1 days;
+        uint256 weekday = (day + 3) % 7; // 0 = Monday
+        if (weekday > 4) day -= weekday - 4; // weekend -> Friday's fixing
+        (uint256 y, uint256 m, uint256 d) = _civil(day);
+        string memory date = string.concat(vm.toString(y), "-", _pad(m), "-", _pad(d));
+        string memory label = string.concat("USD/PHP ", _price2(strike), " floor ", date);
+        uint64 expiry = uint64(block.timestamp + vm.envOr("SEED_DELAY", uint256(600)));
+
+        vm.startBroadcast(pk);
+        _fx(uint32(y * 10000 + m * 100 + d), strike, lower, expiry, label);
         vm.stopBroadcast();
     }
 
@@ -142,5 +159,28 @@ contract Seed is Script {
             IKuruRouter(router).deployProxy(0, os.series(id).protect, ausd, 1e6, 1e4, 10, 1e6, 1e15, 0, 0, 100);
         os.setMarket(id, market);
         console.log(id, label, market);
+    }
+
+    /// @dev Days since 1970-01-01 to (year, month, day), proleptic Gregorian.
+    function _civil(uint256 z) internal pure returns (uint256 y, uint256 m, uint256 d) {
+        z += 719468;
+        uint256 era = z / 146097;
+        uint256 doe = z - era * 146097;
+        uint256 yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+        uint256 doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+        uint256 mp = (5 * doy + 2) / 153;
+        d = doy - (153 * mp + 2) / 5 + 1;
+        m = mp < 10 ? mp + 3 : mp - 9;
+        y = yoe + era * 400 + (m <= 2 ? 1 : 0);
+    }
+
+    function _pad(uint256 v) internal pure returns (string memory) {
+        return v < 10 ? string.concat("0", vm.toString(v)) : vm.toString(v);
+    }
+
+    /// @dev 8-dp price to "62.50".
+    function _price2(int64 p) internal pure returns (string memory) {
+        uint256 c = uint256(int256(p)) / 1e6;
+        return string.concat(vm.toString(c / 100), ".", _pad(c % 100));
     }
 }

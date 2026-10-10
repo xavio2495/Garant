@@ -1,4 +1,4 @@
-import { listSeries, quote, sizeFxFloor } from "@/lib/garant";
+import { listSeries, openUsdPhpSeries, quote, sizeFxFloor } from "@/lib/garant";
 import { publicClient } from "@/lib/chain";
 import { fail, json } from "@/lib/json";
 import { referenceRate } from "@/lib/fx";
@@ -12,11 +12,15 @@ export async function GET(req: Request) {
   if (q.has("notionalUsd")) {
     const notionalUsd = Number(q.get("notionalUsd"));
     if (!(notionalUsd > 0 && notionalUsd <= 10_000)) return fail(400, "notionalUsd must be between 0 and 10000");
-    const s = all.find((x) => x.kind === "FX_FLOOR" && x.state === "OPEN");
+    const s = openUsdPhpSeries(all);
     if (!s) return fail(404, "No open exchange-rate guarantee right now");
-    const protectAmount = sizeFxFloor({ notionalUsd, strike: s.strike, lower: s.lower });
-    const [q2, reference] = await Promise.all([quote(publicClient, { seriesId: s.id, protectAmount }), referenceRate()]);
-    return json({ series: s, quote: q2, reference });
+    const protectAmount = sizeFxFloor({ notionalUsd: BigInt(Math.round(notionalUsd * 1e6)), strike: s.strike, lower: s.lower });
+    try {
+      const [q2, reference] = await Promise.all([quote(publicClient, { seriesId: s.id, protectAmount }), referenceRate()]);
+      return json({ series: s, quote: q2, reference });
+    } catch (e) {
+      return fail(409, `Not enough offers to price this guarantee: ${(e as Error).message}`);
+    }
   }
 
   const id = q.get("seriesId");
@@ -24,5 +28,9 @@ export async function GET(req: Request) {
   if (id === null || amount === null) return fail(400, "Pass notionalUsd, or seriesId and protectAmount");
   const s = all.find((x) => x.id === BigInt(id));
   if (!s) return fail(404, `Series ${id} not found`);
-  return json({ series: s, quote: await quote(publicClient, { seriesId: s.id, protectAmount: BigInt(amount) }) });
+  try {
+    return json({ series: s, quote: await quote(publicClient, { seriesId: s.id, protectAmount: BigInt(amount) }) });
+  } catch (e) {
+    return fail(409, `Not enough offers to price this guarantee: ${(e as Error).message}`);
+  }
 }

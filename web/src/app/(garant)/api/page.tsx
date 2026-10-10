@@ -9,15 +9,17 @@ const ENDPOINTS = [
     does: "Prices a rate guarantee for a transfer. Returns the open USD/PHP series, the cost, and today's reference rate.",
     example: `{
   "series": { "id": "0", "label": "USD/PHP floor 62.50, 9 Nov 2026", "strike": "6250000000", "lower": "6000000000", "expiry": 1794240000 },
-  "quote": { "protectAmount": "8333333", "costAusd": "249999", "avgPrice": 0.03, "validUntil": 1791668385 },
+  "quote": { "protectAmount": "8333333", "costAusd": "916700", "avgPrice": 0.11, "validUntil": 1791669243 },
   "reference": { "rate": 62.821, "date": "2026-10-09" }
 }`,
   },
   {
     method: "POST",
     path: "/api/protect",
-    does: "Buys the quoted guarantee from your partner account and assigns it to the recipient. Body: notionalUsd, seriesId, beneficiary.",
-    example: `{ "txs": ["0x…", "0x…"] }`,
+    does: "Buys a guarantee for a transfer from your partner account. Body: notionalUsd, and optionally beneficiary (otherwise your account holds it and collects for the recipient). Purchases above your per-request limit are refused with 403.",
+    example: `{ "seriesId": "0", "protectAmount": "8333333", "costAusd": "916700", "beneficiary": "0x8B49…e9b1", "txs": ["0x…", "0x…"] }
+
+403 { "error": "Policy: this purchase costs $9.17, over the partner limit of $5.00 per request" }`,
   },
   {
     method: "GET",

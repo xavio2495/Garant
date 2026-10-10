@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useWalletClient } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/providers";
+import { Holdings } from "@/components/holdings";
 import { protect, quote, type Quote, type SeriesView } from "@/lib/garant";
 import { publicClient } from "@/lib/chain";
 import { gql } from "@/lib/indexer";
@@ -12,13 +13,13 @@ import { useSeries } from "@/lib/use-series";
 
 const mm = (v: bigint | string) => (Number(v) / 100).toLocaleString("en-US", { maximumFractionDigits: 1 });
 
-type Report = { id: string; outcome: number; observedA: string; observedB: string };
+type Report = { id: string; outcome: number; observedA: string; observedB: string; finalizeAfter: string };
 
 function useReports() {
   return useQuery({
     queryKey: ["weather-reports"],
     queryFn: async () => {
-      const d = await gql<{ WeatherReport: Report[] }>("{ WeatherReport { id outcome observedA observedB } }");
+      const d = await gql<{ WeatherReport: Report[] }>("{ WeatherReport { id outcome observedA observedB finalizeAfter } }");
       return new Map((d?.WeatherReport ?? []).map((r) => [r.id, r]));
     },
     staleTime: 60_000,
@@ -29,8 +30,9 @@ export function CoverView() {
   const { data: series, isLoading } = useSeries();
   const { data: reports } = useReports();
   const rain = (series ?? []).filter((s) => s.kind === "BINARY");
-  const open = rain.filter((s) => s.state === "OPEN");
-  const settled = rain.filter((s) => s.state !== "OPEN");
+  const [now] = useState(() => Date.now() / 1000);
+  const open = rain.filter((s) => s.state === "OPEN" && s.expiry > now);
+  const past = rain.filter((s) => !open.includes(s));
 
   if (isLoading) return <p className="mt-12 text-muted">Loading available cover…</p>;
 
@@ -68,7 +70,7 @@ export function CoverView() {
             </tr>
           </thead>
           <tbody>
-            {settled.map((s) => {
+            {past.map((s) => {
               const r = reports?.get(s.id.toString());
               return (
                 <tr key={s.id.toString()} className="border-b border-rule align-top">
@@ -76,7 +78,7 @@ export function CoverView() {
                   <td className="py-3 pr-4">{r ? `${mm(r.observedA)} mm` : "–"}</td>
                   <td className="py-3 pr-4">{r ? `${mm(r.observedB)} mm` : "–"}</td>
                   <td className="py-3">
-                    <Result series={s} />
+                    <Result series={s} report={r} />
                   </td>
                 </tr>
               );
@@ -84,11 +86,24 @@ export function CoverView() {
           </tbody>
         </table>
       </section>
+
+      <Holdings title="Your cover" filter={(s) => s.kind === "BINARY"} />
     </>
   );
 }
 
-function Result({ series }: { series: SeriesView }) {
+const OUTCOME = ["Dry enough. No payout.", "It rained. Pays in full.", "Sources disagreed. Settles at half the payout."];
+
+function Result({ series, report }: { series: SeriesView; report?: Report }) {
+  if (series.state === "OPEN") {
+    if (!report) return <span className="text-muted">Waiting for both weather services to publish.</span>;
+    const final = new Date(Number(report.finalizeAfter) * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    return (
+      <span>
+        {OUTCOME[report.outcome]} <span className="text-muted">Final after a review window ending {final}.</span>
+      </span>
+    );
+  }
   if (series.state === "VOIDED")
     return <span className="text-muted">Sources disagreed. Settled at half the payout.</span>;
   return series.payout > 0n ? (
@@ -103,12 +118,22 @@ function BuyCover({ series }: { series: SeriesView }) {
   const { data: wallet } = useWalletClient();
   const [payout, setPayout] = useState(1000);
   const [q, setQ] = useState<Quote | null>(null);
+  const [noOffers, setNoOffers] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!(payout > 0)) return;
-    quote(publicClient, { seriesId: series.id, protectAmount: BigInt(Math.round(payout * 1e6)) }).then(setQ, () => setQ(null));
+    quote(publicClient, { seriesId: series.id, protectAmount: BigInt(Math.round(payout * 1e6)) }).then(
+      (r) => {
+        setQ(r);
+        setNoOffers(false);
+      },
+      () => {
+        setQ(null);
+        setNoOffers(true);
+      },
+    );
   }, [payout, series.id]);
 
   async function buy() {
@@ -145,7 +170,8 @@ function BuyCover({ series }: { series: SeriesView }) {
       </div>
       <div className="md:text-right">
         <p className="text-sm text-muted">Cost today</p>
-        <p className="font-display text-3xl font-semibold">{q ? usd(toNum6(q.costAusd)) : "…"}</p>
+        <p className="font-display text-3xl font-semibold">{q ? usd(toNum6(q.costAusd)) : noOffers ? "–" : "…"}</p>
+        {noOffers ? <p className="max-w-[14rem] text-sm text-muted md:ml-auto">Not enough cover on offer for this amount. Try a smaller payout.</p> : null}
         {auth.signedIn ? (
           <button
             onClick={buy}

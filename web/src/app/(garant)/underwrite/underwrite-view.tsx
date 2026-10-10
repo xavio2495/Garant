@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useWalletClient } from "wagmi";
 import type { Hex, WalletClient } from "viem";
 import { useAuth } from "@/components/providers";
+import { Holdings } from "@/components/holdings";
 import { mintSets, postAsk, withdrawProceeds, type SeriesView } from "@/lib/garant";
 import { explorerTx } from "@/lib/chain";
 import { date, fx8, php, usd } from "@/lib/format";
@@ -35,9 +36,19 @@ const terms = (s: SeriesView) =>
     : `Pays $1 if at least ${(Number(s.strike) / 100).toFixed(0)} mm of rain is measured. ${s.label}.`;
 
 export function UnderwriteView() {
+  return (
+    <>
+      <Market />
+      <Holdings title="Your holdings" />
+    </>
+  );
+}
+
+function Market() {
   const { data: series } = useSeries();
   const { data: rate } = useRate();
-  const open = (series ?? []).filter((s) => s.state === "OPEN");
+  const [now] = useState(() => Date.now() / 1000);
+  const open = (series ?? []).filter((s) => s.state === "OPEN" && s.expiry > now);
   const [selected, setSelected] = useState<string | null>(null);
   const current = open.find((s) => s.id.toString() === selected) ?? open[0];
 
@@ -99,10 +110,10 @@ export function UnderwriteView() {
           <Step
             n={3}
             title="Collect what you've earned"
-            help="Sale proceeds wait in your trading balance until you withdraw them."
-            fields={[{ name: "amount", label: "Amount", unit: "$", value: 3 }]}
+            help="Sale proceeds wait in your trading balance until you withdraw them. This moves all of it to your wallet."
+            fields={[]}
             action="Withdraw"
-            run={(w, v) => withdrawProceeds(w, { amount: BigInt(Math.round(v.amount * 1e6)) })}
+            run={(w) => withdrawProceeds(w)}
           />
         </ol>
       </div>
@@ -125,13 +136,13 @@ function Step({
   help: string;
   fields: Field[];
   action: string;
-  run: (wallet: WalletClient, values: Record<string, number>) => Promise<Hex>;
+  run: (wallet: WalletClient, values: Record<string, number>) => Promise<Hex | null>;
 }) {
   const auth = useAuth();
   const { data: wallet } = useWalletClient();
   const [values, setValues] = useState(() => Object.fromEntries(fields.map((f) => [f.name, f.value])));
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ ok: true; hash: Hex } | { ok: false; error: string } | null>(null);
+  const [result, setResult] = useState<{ ok: true; hash: Hex | null } | { ok: false; error: string } | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -188,10 +199,16 @@ function Step({
         {result ? (
           result.ok ? (
             <p role="status" className="mt-3 text-sm text-garant">
-              Done.{" "}
-              <a href={explorerTx(result.hash)} target="_blank" rel="noreferrer" className="underline underline-offset-4">
-                View the transaction
-              </a>
+              {result.hash ? (
+                <>
+                  Done.{" "}
+                  <a href={explorerTx(result.hash)} target="_blank" rel="noreferrer" className="underline underline-offset-4">
+                    View the transaction
+                  </a>
+                </>
+              ) : (
+                "Nothing to withdraw yet."
+              )}
             </p>
           ) : (
             <p role="alert" className="mt-3 text-sm text-alert">

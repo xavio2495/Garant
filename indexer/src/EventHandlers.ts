@@ -225,6 +225,7 @@ indexer.onEvent(
       timestamp: event.block.timestamp,
       txHash: event.transaction.hash,
     });
-    await bumpStats(context, { trades: 1, tradeVolume: (p.filledSize * p.price) / 10_000n });
+    // Kuru prices are 1e18-scaled; sizes are 6 dp, so this is AUSD in 6 dp
+    await bumpStats(context, { trades: 1, tradeVolume: (p.filledSize * p.price) / 10n ** 18n });
   },
 );

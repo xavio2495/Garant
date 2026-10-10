@@ -1,10 +1,18 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
-import { WagmiProvider as PlainWagmiProvider, createConfig as createPlainConfig, http, useAccount } from "wagmi";
+import {
+  WagmiProvider as PlainWagmiProvider,
+  createConfig as createPlainConfig,
+  http,
+  useAccount,
+  useConnect,
+  useDisconnect,
+} from "wagmi";
+import { injected } from "wagmi/connectors";
 import { chain } from "@/lib/chain";
 
 const queryClient = new QueryClient();
@@ -42,11 +50,41 @@ function PrivyAuth({ children }: { children: ReactNode }) {
   );
 }
 
+// Without Privy, people sign in with a browser wallet
+function InjectedAuth({ children }: { children: ReactNode }) {
+  const { address, isConnected } = useAccount();
+  const { connect, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
+  const available = useSyncExternalStore(
+    () => () => {},
+    () => "ethereum" in window,
+    () => false,
+  );
+  return (
+    <AuthContext.Provider
+      value={{
+        enabled: available,
+        ready: !isPending,
+        signedIn: isConnected,
+        address,
+        signIn: () => connect({ connector: injected(), chainId: chain.id }),
+        signOut: () => disconnect(),
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+const injectedConfig = createPlainConfig({ chains: [chain], connectors: [injected()], transports });
+
 export function Providers({ children }: { children: ReactNode }) {
   if (!privyAppId) {
     return (
       <QueryClientProvider client={queryClient}>
-        <PlainWagmiProvider config={createPlainConfig({ chains: [chain], transports })}>{children}</PlainWagmiProvider>
+        <PlainWagmiProvider config={injectedConfig}>
+          <InjectedAuth>{children}</InjectedAuth>
+        </PlainWagmiProvider>
       </QueryClientProvider>
     );
   }
