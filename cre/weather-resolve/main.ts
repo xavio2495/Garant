@@ -26,6 +26,7 @@ import {
   parseAbiParameters,
   zeroAddress,
 } from "viem";
+import { decideFx, decodePair, type FxSpec, fxSourceAUrl, fxSourceBUrl, parseFxA, parseFxB } from "./src/fx";
 import { decide, parseA, parseB, sourceAUrl, sourceBUrl, type WeatherSpec } from "./src/weather";
 
 export type Config = {
@@ -33,9 +34,12 @@ export type Config = {
   chainName: string;
   outcomeSeries: string;
   creResolver: string;
+  creFxResolver: string;
+  fxTolBps: number;
 };
 
 const KIND_BINARY = 0;
+const KIND_FX_FLOOR = 1;
 const STATE_OPEN = 0;
 const MAX_REPORTS_PER_RUN = 5;
 const GAS_LIMIT = "500000";
@@ -48,6 +52,11 @@ const outcomeSeriesAbi = parseAbi([
 
 const creResolverAbi = parseAbi([
   "function spec(uint256 id) view returns (int32 lat1e4, int32 lon1e4, uint32 yyyymmdd, bool registered)",
+  "function pending(uint256 id) view returns (bool exists, uint8 outcome, uint64 finalizeAfter)",
+]);
+
+const creFxResolverAbi = parseAbi([
+  "function spec(uint256 id) view returns (bytes32 pair, uint32 yyyymmdd, bool registered)",
   "function pending(uint256 id) view returns (bool exists, uint8 outcome, uint64 finalizeAfter)",
 ]);
 
@@ -70,8 +79,16 @@ const fetchObservation = (requester: HTTPSendRequester, spec: WeatherSpec): Obse
   b: parseB(fetchJson(requester, sourceBUrl(spec)), spec.yyyymmdd) ?? -1,
 });
 
+// Rate per source; -1 means missing or not for the requested date.
+type FxObservation = { a: number; b: number };
+
+const fetchFx = (requester: HTTPSendRequester, spec: FxSpec): FxObservation => ({
+  a: parseFxA(fetchJson(requester, fxSourceAUrl(spec)), spec) ?? -1,
+  b: parseFxB(fetchJson(requester, fxSourceBUrl(spec)), spec) ?? -1,
+});
+
 export const onCronTrigger = (runtime: Runtime<Config>): string => {
-  const { chainName, outcomeSeries, creResolver } = runtime.config;
+  const { chainName, outcomeSeries, creResolver, creFxResolver, fxTolBps } = runtime.config;
   const network = getNetwork({ chainFamily: "evm", chainSelectorName: chainName });
   if (!network) throw new Error(`Network not found: ${chainName}`);
   const evm = new EVMClient(network.chainSelector.selector);
@@ -93,37 +110,58 @@ export const onCronTrigger = (runtime: Runtime<Config>): string => {
 
   for (let id = 0n; id < count && reported < MAX_REPORTS_PER_RUN; id++) {
     const s = read(outcomeSeries, outcomeSeriesAbi, "series", [id]);
-    if (s.kind !== KIND_BINARY || s.state !== STATE_OPEN) continue;
-    if (s.resolver.toLowerCase() !== creResolver.toLowerCase() || s.expiry > now) continue;
+    if (s.state !== STATE_OPEN || s.expiry > now) continue;
+    const resolver = s.resolver.toLowerCase();
 
-    const [lat1e4, lon1e4, yyyymmdd, registered] = read(creResolver, creResolverAbi, "spec", [id]);
-    if (!registered) continue;
-    const [exists] = read(creResolver, creResolverAbi, "pending", [id]);
-    if (exists) continue;
+    let receiver: string;
+    let outcome: number;
+    let a: bigint;
+    let b: bigint;
+    if (s.kind === KIND_BINARY && resolver === creResolver.toLowerCase()) {
+      const [lat1e4, lon1e4, yyyymmdd, registered] = read(creResolver, creResolverAbi, "spec", [id]);
+      if (!registered) continue;
+      const [exists] = read(creResolver, creResolverAbi, "pending", [id]);
+      if (exists) continue;
 
-    const spec: WeatherSpec = { lat1e4, lon1e4, yyyymmdd };
-    const obs = http
-      .sendRequest(runtime, fetchObservation, ConsensusAggregationByFields<Observation>({ a: median, b: median }))(spec)
-      .result();
-    const d = decide(obs.a < 0 ? null : obs.a, obs.b < 0 ? null : obs.b, s.strike);
-    if (d.kind === "retry") {
-      runtime.log(`series ${id}: retry (${d.reason})`);
-      continue;
-    }
+      const spec: WeatherSpec = { lat1e4, lon1e4, yyyymmdd };
+      const obs = http
+        .sendRequest(runtime, fetchObservation, ConsensusAggregationByFields<Observation>({ a: median, b: median }))(spec)
+        .result();
+      const d = decide(obs.a < 0 ? null : obs.a, obs.b < 0 ? null : obs.b, s.strike);
+      if (d.kind === "retry") {
+        runtime.log(`series ${id}: retry (${d.reason})`);
+        continue;
+      }
+      [receiver, outcome, a, b] = [creResolver, d.outcome, d.observedA, d.observedB];
+    } else if (s.kind === KIND_FX_FLOOR && resolver === creFxResolver.toLowerCase()) {
+      const [pair, yyyymmdd, registered] = read(creFxResolver, creFxResolverAbi, "spec", [id]);
+      if (!registered) continue;
+      const [exists] = read(creFxResolver, creFxResolverAbi, "pending", [id]);
+      if (exists) continue;
+
+      const spec: FxSpec = { ...decodePair(pair), yyyymmdd };
+      const obs = http
+        .sendRequest(runtime, fetchFx, ConsensusAggregationByFields<FxObservation>({ a: median, b: median }))(spec)
+        .result();
+      const d = decideFx(obs.a < 0 ? null : obs.a, obs.b < 0 ? null : obs.b, fxTolBps);
+      if (d.kind === "retry") {
+        runtime.log(`series ${id}: retry (${d.reason})`);
+        continue;
+      }
+      [receiver, outcome, a, b] = [creFxResolver, d.outcome, d.rateA, d.rateB];
+    } else continue;
 
     const report = runtime
       .report({
-        encodedPayload: hexToBase64(encodeReport(id, d.outcome, d.observedA, d.observedB)),
+        encodedPayload: hexToBase64(encodeReport(id, outcome, a, b)),
         encoderName: "evm",
         signingAlgo: "ecdsa",
         hashingAlgo: "keccak256",
       })
       .result();
-    const tx = evm.writeReport(runtime, { receiver: creResolver, report, gasConfig: { gasLimit: GAS_LIMIT } }).result();
+    const tx = evm.writeReport(runtime, { receiver, report, gasConfig: { gasLimit: GAS_LIMIT } }).result();
     const hash = bytesToHex(tx.txHash ?? new Uint8Array(32));
-    runtime.log(
-      `series ${id}: outcome ${d.outcome} A=${d.observedA} B=${d.observedB} tx ${hash} status ${TxStatus[tx.txStatus]}`,
-    );
+    runtime.log(`series ${id}: outcome ${outcome} A=${a} B=${b} tx ${hash} status ${TxStatus[tx.txStatus]}`);
     reported++;
   }
   return `reported ${reported}`;

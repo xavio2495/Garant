@@ -8,7 +8,7 @@ export type Decision =
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function isoDate(ymd: number): string {
+export function isoDate(ymd: number): string {
   const y = Math.floor(ymd / 10000);
   const m = Math.floor(ymd / 100) % 100;
   const d = ymd % 100;
