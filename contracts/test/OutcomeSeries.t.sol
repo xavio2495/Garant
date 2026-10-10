@@ -217,8 +217,22 @@ contract OutcomeSeriesTest is Test {
         os.redeem(id, alice);
         vm.prank(bob);
         os.redeem(id, bob);
-        // each holder rounds down at most 1 unit per leg
-        assertLe(ausd.balanceOf(address(os)), 4);
-        assertGe(ausd.balanceOf(alice) + ausd.balanceOf(bob), 1_000e6 + total - 4);
+        // each holder rounds down at most 1 unit per unmatched leg
+        assertLe(ausd.balanceOf(address(os)), 2);
+        assertGe(ausd.balanceOf(alice) + ausd.balanceOf(bob), 1_000e6 + total - 2);
+    }
+
+    function testFuzz_fullSetPaysExactlyOneAfterSettle(uint256 payout, uint96 amount) public {
+        payout = bound(payout, 0, 1e18);
+        vm.assume(amount > 0);
+        ausd.mint(alice, amount);
+        _mint(amount);
+        vm.warp(expiry);
+        vm.prank(resolver);
+        os.settle(id, payout, 0, 0);
+        vm.prank(alice);
+        os.redeem(id, alice);
+        assertEq(ausd.balanceOf(alice), 1_000e6 + uint256(amount));
+        assertEq(ausd.balanceOf(address(os)), 0);
     }
 }

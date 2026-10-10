@@ -105,7 +105,7 @@ contract OutcomeSeries is IOutcomeSeries, Ownable, ReentrancyGuard {
         uint256 protectIn = IERC20(s.protect).balanceOf(msg.sender);
         uint256 backIn = IERC20(s.back).balanceOf(msg.sender);
         if (protectIn + backIn == 0) revert ZeroAmount();
-        uint256 out = (protectIn * s.payout) / ONE + (backIn * (ONE - s.payout)) / ONE;
+        uint256 out = _claim(protectIn, backIn, s.payout);
 
         if (protectIn > 0) OutcomeToken(s.protect).burn(msg.sender, protectIn);
         if (backIn > 0) OutcomeToken(s.back).burn(msg.sender, backIn);
@@ -155,6 +155,12 @@ contract OutcomeSeries is IOutcomeSeries, Ownable, ReentrancyGuard {
         if (msg.sender != s.resolver) revert OnlyResolver();
         if (s.state != State.OPEN) revert NotOpen();
         if (block.timestamp < s.expiry) revert NotExpired();
+    }
+
+    /// @dev Matched PROTECT+BACK pairs pay exactly 1; only the unmatched remainder is rounded down.
+    function _claim(uint256 protectIn, uint256 backIn, uint256 payout) private pure returns (uint256) {
+        uint256 sets = protectIn < backIn ? protectIn : backIn;
+        return sets + ((protectIn - sets) * payout) / ONE + ((backIn - sets) * (ONE - payout)) / ONE;
     }
 
     function _void(Series storage s, uint256 id) private {

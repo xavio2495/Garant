@@ -16,3 +16,15 @@ interface ICREResolver {
     function spec(uint256 id) external view returns (int32 lat1e4, int32 lon1e4, uint32 yyyymmdd, bool registered);
     function pending(uint256 id) external view returns (bool exists, uint8 outcome, uint64 finalizeAfter);
 }
+
+interface ICREFxResolver {
+    event FxRegistered(uint256 indexed id, bytes32 pair, uint32 yyyymmdd);
+    event FxReportReceived(uint256 indexed id, uint8 outcome, int64 rateA, int64 rateB, uint64 finalizeAfter);
+
+    function register(uint256 id, bytes32 pair, uint32 yyyymmdd) external;
+    function onReport(bytes calldata metadata, bytes calldata report) external;
+    function finalize(uint256 id) external;
+    function guardianVoid(uint256 id) external;
+    function spec(uint256 id) external view returns (bytes32 pair, uint32 yyyymmdd, bool registered);
+    function pending(uint256 id) external view returns (bool exists, uint8 outcome, uint64 finalizeAfter);
+}

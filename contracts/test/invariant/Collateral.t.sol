@@ -102,7 +102,8 @@ contract Handler is Test {
         uint256 p = OutcomeToken(s.protect).balanceOf(who);
         uint256 b = OutcomeToken(s.back).balanceOf(who);
         if (s.state == State.OPEN) return p < b ? p : b; // only complete sets are claimable while open
-        return (p * s.payout) / 1e18 + (b * (1e18 - s.payout)) / 1e18;
+        uint256 sets = p < b ? p : b;
+        return sets + ((p - sets) * s.payout) / 1e18 + ((b - sets) * (1e18 - s.payout)) / 1e18;
     }
 }
 

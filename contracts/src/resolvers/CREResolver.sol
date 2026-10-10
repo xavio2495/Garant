@@ -35,12 +35,14 @@ contract CREResolver is ICREResolver, IReceiver, IERC165, Ownable {
     }
 
     IOutcomeSeries public immutable outcomeSeries;
-    address public immutable forwarder;
+    address public forwarder;
     address public immutable guardian;
     uint64 public immutable challengeWindow;
 
     mapping(uint256 => Spec) private _specs;
     mapping(uint256 => Report) public reports;
+
+    event ForwarderUpdated(address forwarder);
 
     error NotBinarySeries();
     error RefMismatch();
@@ -72,6 +74,11 @@ contract CREResolver is ICREResolver, IReceiver, IERC165, Ownable {
         if (_specs[id].registered) revert AlreadyRegistered();
         _specs[id] = Spec(lat1e4, lon1e4, yyyymmdd, true);
         emit WeatherRegistered(id, lat1e4, lon1e4, yyyymmdd);
+    }
+
+    function setForwarder(address forwarder_) external onlyOwner {
+        forwarder = forwarder_;
+        emit ForwarderUpdated(forwarder_);
     }
 
     /// @param report abi.encode(uint256 id, uint8 outcome, int64 observedA, int64 observedB)

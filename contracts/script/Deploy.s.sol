@@ -6,8 +6,9 @@ import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import {OutcomeSeries} from "../src/OutcomeSeries.sol";
 import {PythResolver} from "../src/resolvers/PythResolver.sol";
 import {CREResolver} from "../src/resolvers/CREResolver.sol";
+import {CREFxResolver} from "../src/resolvers/CREFxResolver.sol";
 
-/// @notice Deploys OutcomeSeries + both resolvers on Monad testnet and writes deployments/10143.json.
+/// @notice Deploys OutcomeSeries + the three resolvers on Monad testnet and writes deployments/10143.json.
 ///         env: DEPLOYER_PRIVATE_KEY; optional CRE_FORWARDER (defaults to the simulation forwarder).
 contract Deploy is Script {
     address constant AUSD = 0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC;
@@ -16,6 +17,7 @@ contract Deploy is Script {
     address constant CRE_SIM_FORWARDER = 0xB9F79d863261869B234c481D1f9A7af84AeAd192;
     uint256 constant MAX_CONF_BPS = 100;
     uint64 constant CHALLENGE_WINDOW = 600;
+    uint256 constant FX_TOL_BPS = 50;
 
     function run() external {
         uint256 pk = vm.envUint("DEPLOYER_PRIVATE_KEY");
@@ -27,6 +29,7 @@ contract Deploy is Script {
         OutcomeSeries os = new OutcomeSeries(AUSD, deployer);
         PythResolver pr = new PythResolver(os, IPyth(PYTH), MAX_CONF_BPS);
         CREResolver cr = new CREResolver(os, forwarder, deployer, CHALLENGE_WINDOW, deployer);
+        CREFxResolver fx = new CREFxResolver(os, forwarder, deployer, CHALLENGE_WINDOW, FX_TOL_BPS, deployer);
         vm.stopBroadcast();
 
         string memory k = "d";
@@ -37,6 +40,7 @@ contract Deploy is Script {
         vm.serializeAddress(k, "outcomeSeries", address(os));
         vm.serializeAddress(k, "pythResolver", address(pr));
         vm.serializeAddress(k, "creResolver", address(cr));
+        vm.serializeAddress(k, "creFxResolver", address(fx));
         vm.serializeAddress(k, "creForwarder", forwarder);
         vm.serializeString(k, "marketMode", "kuru");
         vm.serializeAddress(k, "kuruRouter", KURU_ROUTER);

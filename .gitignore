@@ -14,6 +14,7 @@ node_modules/
 .pnpm-store/
 contracts/out/
 contracts/dependencies/
+sdk/dist/
 contracts/cache/
 contracts/broadcast/**/dry-run/
 .next/

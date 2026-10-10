@@ -173,4 +173,24 @@ contract CREResolverTest is Test {
         vm.expectRevert(CREResolver.NotOpen.selector);
         _report(1, 2000, 2000);
     }
+
+    function test_setForwarder() public {
+        address next = makeAddr("next");
+        vm.prank(guardian);
+        vm.expectRevert();
+        cr.setForwarder(next);
+
+        vm.expectEmit(address(cr));
+        emit CREResolver.ForwarderUpdated(next);
+        cr.setForwarder(next);
+        assertEq(cr.forwarder(), next);
+
+        vm.warp(expiry);
+        vm.expectRevert(CREResolver.OnlyForwarder.selector);
+        _report(1, 2000, 2000);
+        vm.prank(next);
+        cr.onReport("", abi.encode(id, uint8(1), int64(2000), int64(2000)));
+        (bool exists,,) = cr.pending(id);
+        assertTrue(exists);
+    }
 }

@@ -1,0 +1,27 @@
+{
+  "name": "@garant/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "abi": "node scripts/abi.mjs",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:fork": "node scripts/fork-e2e.mjs"
+  },
+  "peerDependencies": {
+    "viem": "^2.57.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "viem": "^2.57.4"
+  }
+}
