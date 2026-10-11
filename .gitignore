@@ -26,3 +26,5 @@ cre/**/.cre_build_tmp.js
 *.wasm
 *.log
 .DS_Store
+.vercel
+.env*

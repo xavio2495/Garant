@@ -1,0 +1,15 @@
+/*
+!/package.json
+!/pnpm-lock.yaml
+!/pnpm-workspace.yaml
+!/deployments
+!/sdk
+!/web
+!/indexer
+/indexer/*
+!/indexer/package.json
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+/sdk/dist
+/web/.env*
