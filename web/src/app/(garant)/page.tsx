@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FloorLine } from "@/components/floor-line";
 import { LiveProof } from "@/components/live-proof";
+import { TesterStart } from "@/components/tester-start";
 
 const USES = [
   {
@@ -36,6 +37,8 @@ export default function Home() {
         </div>
         <FloorLine className="w-full" />
       </section>
+
+      <TesterStart />
 
       <section className="divide-y divide-rule">
         {USES.map((u) => (
