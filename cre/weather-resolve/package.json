@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "@chainlink/cre-sdk": "^1.19.1",
     "viem": "^2.54.2"
