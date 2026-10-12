@@ -2,7 +2,15 @@ import { isAddress, type Address } from "viem";
 import { listSeries, openUsdPhpSeries, protect, quote, sizeFxFloor } from "@/lib/garant";
 import { publicClient } from "@/lib/chain";
 import { fail, json } from "@/lib/json";
-import { MAX_AUSD_PER_REQUEST, PolicyError, capMessage, partnerAddress, partnerWallet } from "@/lib/partner-wallet";
+import {
+  MAX_AUSD_PER_REQUEST,
+  PolicyError,
+  capMessage,
+  isPrivyPolicyDenial,
+  partnerAddress,
+  partnerWallet,
+  usesPrivy,
+} from "@/lib/partner-wallet";
 
 // POST { notionalUsd, beneficiary? } buys a USD/PHP rate guarantee from the
 // partner's wallet. Without a beneficiary the partner holds it and claims for
@@ -26,12 +34,19 @@ export async function POST(req: Request) {
   } catch (e) {
     return fail(409, `Not enough offers to price this guarantee: ${(e as Error).message}`);
   }
-  if (q.costAusd > MAX_AUSD_PER_REQUEST) return fail(403, capMessage(q.costAusd));
+  // With a Privy wallet the cap is left to Privy's policy, which refuses to sign the approval
+  if (!usesPrivy && q.costAusd > MAX_AUSD_PER_REQUEST) return fail(403, capMessage(q.costAusd));
 
+  const signer = usesPrivy ? "privy" : "local";
   try {
-    const txs = await protect(partnerWallet(series, beneficiary), { quote: q, beneficiary, maxCostAusd: MAX_AUSD_PER_REQUEST });
-    return json({ seriesId: series.id, protectAmount, costAusd: q.costAusd, beneficiary, txs });
+    const maxCostAusd = usesPrivy ? q.costAusd : MAX_AUSD_PER_REQUEST;
+    const txs = await protect(partnerWallet(series, beneficiary), { quote: q, beneficiary, maxCostAusd });
+    return json({ seriesId: series.id, protectAmount, costAusd: q.costAusd, beneficiary, signer, txs });
   } catch (e) {
+    if (isPrivyPolicyDenial(e)) {
+      const why = q.costAusd > MAX_AUSD_PER_REQUEST ? ` ${capMessage(q.costAusd).replace("Policy: t", "T")}` : "";
+      return fail(403, `Blocked by the Privy wallet policy.${why}`);
+    }
     if (e instanceof PolicyError) return fail(403, e.message);
     return fail(502, `Purchase failed: ${(e as Error).message}`);
   }

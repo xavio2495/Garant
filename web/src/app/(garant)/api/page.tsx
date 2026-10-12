@@ -25,15 +25,15 @@ const ENDPOINTS: Endpoint[] = [
   {
     method: "POST",
     path: "/api/protect",
-    does: "Buys a guarantee for a transfer from your partner account. Body: notionalUsd, and optionally beneficiary. Without a beneficiary your account holds the guarantee and collects for the recipient. Every transaction is checked against your account's policy before it is signed: only Garant's contracts, and no more than your per-request limit.",
+    does: "Buys a guarantee for a transfer from your partner account. Body: notionalUsd, and optionally beneficiary. Without a beneficiary your account holds the guarantee and collects for the recipient. Your partner account is a Privy server wallet. Privy signs only what the account's policy allows: calls to Garant's contracts on Monad, and approvals within your per-request limit. Anything else is refused before it is signed.",
     example: `{ "notionalUsd": 200, "beneficiary": "0x…" }
 
 { "seriesId": "0", "protectAmount": "8333333", "costAusd": "916700",
-  "beneficiary": "0x8B49…e9b1", "txs": ["0x142f…ec45", "0x2e72…4e8d"] }`,
+  "beneficiary": "0x8B49…e9b1", "signer": "privy", "txs": ["0x142f…ec45", "0x2e72…4e8d"] }`,
     errors: [
       [400, "notionalUsd must be greater than 0 and at most 10000"],
       [400, "beneficiary must be an address"],
-      [403, "Policy: this purchase costs $9.17, over the partner limit of $5.00 per request"],
+      [403, "Blocked by the Privy wallet policy. This purchase costs $9.17, over the partner limit of $5.00 per request"],
       [404, "No open exchange-rate guarantee right now"],
       [409, "Not enough offers to price this guarantee: …"],
       [502, "Purchase failed: …"],
