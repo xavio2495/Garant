@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FloorLine } from "@/components/floor-line";
 import { GlassIcon, type GlassIconKind } from "@/components/glass-icon";
 import { LiveProof } from "@/components/live-proof";
-import { PrismFloor } from "@/components/prism-floor";
+import { HeroVideo } from "@/components/hero-video";
 import { TesterStart } from "@/components/tester-start";
 
 const USES: { href: string; title: string; body: string; icon: GlassIconKind }[] = [
@@ -48,7 +48,7 @@ export default function Home() {
             Underwrite
           </Link>
         </div>
-        <PrismFloor className="mx-auto -mb-2 mt-6 w-full max-w-3xl" />
+        <HeroVideo className="mx-auto -mb-6 mt-4 w-full max-w-4xl" />
       </section>
 
       <section className="glass rounded-2xl px-6 py-8 sm:px-10">
