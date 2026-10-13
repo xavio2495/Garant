@@ -36,16 +36,16 @@ export function LiveProof() {
   ];
 
   return (
-    <Link href="/dashboard" className="group mt-6 block">
+    <Link href="/app/dashboard" className="group mt-6 block">
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {facts.map((f) => (
           <div key={f.label} className="border-l border-rule pl-3">
-            <dd className="font-pixel text-xl text-ink">{f.value}</dd>
-            <dt className="text-sm text-muted">{f.label}</dt>
+            <dd className="font-pixel text-2xl text-ink">{f.value}</dd>
+            <dt className="mt-1 text-sm text-muted">{f.label}</dt>
           </div>
         ))}
       </dl>
-      <p className="mt-3 text-sm text-garant underline-offset-4 group-hover:underline">Live from Monad testnet. See the dashboard</p>
+      <p className="mt-5 font-mono text-xs uppercase tracking-[0.12em] text-garant group-hover:underline underline-offset-4">Live from Monad testnet. See the dashboard →</p>
     </Link>
   );
 }

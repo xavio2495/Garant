@@ -7,6 +7,9 @@ import { explorerTx } from "@/lib/chain";
 
 const FEEDBACK_URL = process.env.NEXT_PUBLIC_FEEDBACK_URL;
 
+// Measured on the live testnet loop (the same figures the deck quotes)
+const PROOF = ["55–59 s from expiry to settlement report", "100% of every payout locked", "20 AUSD in, 20 out", "7 series settled live"];
+
 type State = { kind: "idle" | "busy" } | { kind: "done"; message: string; txs: string[] } | { kind: "error"; message: string };
 
 // Gets a new tester from zero to a funded testnet wallet in two clicks
@@ -32,7 +35,7 @@ export function TesterStart() {
       title: "Sign in",
       body: auth.signedIn ? "You're signed in." : "With email, Google or a browser wallet.",
       action: !auth.signedIn && auth.enabled && (
-        <button onClick={auth.signIn} disabled={!auth.ready} className="btn btn-primary px-4 py-1.5 text-xs">
+        <button onClick={auth.signIn} disabled={!auth.ready} className="btn btn-primary px-4 py-2">
           Sign in
         </button>
       ),
@@ -44,7 +47,7 @@ export function TesterStart() {
         <button
           onClick={topUp}
           disabled={state.kind === "busy"}
-          className="btn btn-primary px-4 py-1.5 text-xs"
+          className="btn btn-primary px-4 py-2"
         >
           {state.kind === "busy" ? "Sending…" : "Get test funds"}
         </button>
@@ -54,8 +57,7 @@ export function TesterStart() {
       title: "Try it",
       body: (
         <>
-          Buy <Link href="/cover" className="text-garant underline underline-offset-4">rain cover</Link> or{" "}
-          <Link href="/underwrite" className="text-garant underline underline-offset-4">underwrite</Link> a guarantee
+          Buy rain cover, or back the guarantees and earn the fee
           {FEEDBACK_URL && (
             <>
               , then{" "}
@@ -71,21 +73,31 @@ export function TesterStart() {
   ];
 
   return (
-    <section aria-labelledby="tester-start" className="glass glass-quiet mt-16 rounded-2xl px-6 py-8 sm:px-10">
-      <p className="eyebrow">For testers</p>
-      <h2 id="tester-start" className="mt-2 font-display text-2xl font-semibold">
-        Testing Garant? Start here
-      </h2>
-      <ol className="mt-6 grid gap-6 sm:grid-cols-3">
-        {steps.map((s, i) => (
-          <li key={s.title} className="border-l border-rule pl-4">
-            <p className="font-pixel text-lg text-garant">0{i + 1}</p>
-            <h3 className="font-medium">{s.title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{s.body}</p>
-            {s.action && <div className="mt-3">{s.action}</div>}
-          </li>
-        ))}
-      </ol>
+    <div className="contents">
+      <div data-part className="max-w-5xl">
+        <h2 id="tester-start" className="font-display text-[clamp(1.5rem,3.4vw,3.2rem)] leading-[1.08]">
+          Live on Monad testnet. <span className="text-muted">Start here.</span>
+        </h2>
+        <p className="mt-4 font-mono text-[0.68rem] uppercase leading-relaxed tracking-[0.18em] text-muted">
+          {PROOF.join(" · ")} <span className="text-floor">· measured on testnet</span>
+        </p>
+      </div>
+      <div data-arc="start" className="arc mt-10 grid gap-5 md:grid-cols-3">
+        <ol className="contents">
+          {steps.map((s, i) => (
+            <li key={s.title} data-card className="glass glass-quiet flex flex-col p-6 sm:p-7">
+              <p className="font-pixel text-xl text-floor">0{i + 1}</p>
+              <h3 className="mt-8 font-display text-xl leading-tight sm:text-2xl">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
+              {s.action && <div className="mt-4">{s.action}</div>}
+            </li>
+          ))}
+        </ol>
+        {/* Floats in front of the last card on the stage, rather than sitting inside it */}
+        <div data-pop="2" className="justify-self-end md:col-start-3">
+          <Link href="/app" className="btn btn-glass px-6 py-3">Open the app</Link>
+        </div>
+      </div>
       {state.kind === "done" && (
         <p role="status" className="mt-5 text-sm text-garant">
           {state.message}{" "}
@@ -101,6 +113,6 @@ export function TesterStart() {
           {state.message}
         </p>
       )}
-    </section>
+    </div>
   );
 }

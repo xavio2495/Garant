@@ -9,6 +9,8 @@ import { claim, status, type SeriesView } from "@/lib/garant";
 import { explorerTx, publicClient } from "@/lib/chain";
 import { toNum6, usd } from "@/lib/format";
 import { useSeries } from "@/lib/use-series";
+import { Panel } from "@/components/app/panel";
+import { Stage } from "@/components/app/stage";
 
 const STATE = { OPEN: "Open", RESOLVED: "Settled", VOIDED: "Voided" };
 
@@ -30,12 +32,13 @@ export function Holdings({ title, filter }: { title: string; filter?: (s: Series
   if (!auth.signedIn) return null;
 
   return (
-    <section className="mt-16">
-      <h2 className="font-display text-2xl font-semibold tracking-tight">{title}</h2>
+    <Stage className="mt-16">
+      <h2 className="font-display text-2xl sm:text-3xl">{title}</h2>
       {isLoading ? (
         <p className="mt-3 text-muted">Loading…</p>
       ) : rows?.length ? (
-        <div className="glass glass-quiet mt-4 overflow-x-auto rounded-2xl px-5 py-2">
+        <Panel quiet className="mt-5">
+        <div data-lenis-prevent className="scroll-tiny overflow-x-auto px-5 py-2">
           <table className="w-full min-w-[36rem] text-left text-sm">
             <thead className="text-xs uppercase tracking-wider text-muted">
               <tr className="border-b border-rule">
@@ -65,10 +68,11 @@ export function Holdings({ title, filter }: { title: string; filter?: (s: Series
             </tbody>
           </table>
         </div>
+        </Panel>
       ) : (
         <p className="mt-3 text-muted">Nothing held yet.</p>
       )}
-    </section>
+    </Stage>
   );
 }
 
@@ -99,7 +103,7 @@ function ClaimButton({ seriesId, amount }: { seriesId: bigint; amount: bigint })
             setState({ busy: false, error: (e as Error).message });
           }
         }}
-        className="btn btn-primary px-4 py-1.5 text-xs"
+        className="btn btn-glass px-4 py-1.5 text-xs"
       >
         {state.busy ? "Collecting…" : `Collect ${usd(toNum6(amount))}`}
       </button>

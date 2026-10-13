@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 250" width="1500" height="250" role="img"><defs>
+  <pattern id="px" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#fff" opacity="0.055"/></pattern>
+  <radialGradient id="fade" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#000" stop-opacity="0.85"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#a0beff" stop-opacity="0.13"/><stop offset="0.45" stop-color="#fff" stop-opacity="0.025"/><stop offset="1" stop-color="#c887ff" stop-opacity="0.09"/></linearGradient>
+  <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5affc8"/><stop offset="0.5" stop-color="#82afff"/><stop offset="1" stop-color="#c887ff"/></linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0.38" stop-color="#fff" stop-opacity="0"/><stop offset="0.46" stop-color="#fff" stop-opacity="0.07"/><stop offset="0.54" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<rect width="1500" height="250" rx="20" fill="#030304"/>
+<rect width="1500" height="250" rx="20" fill="url(#px)"/>
+<rect width="1500" height="250" rx="20" fill="url(#fade)"/><g>
+  <rect x="45" y="40" width="330" height="170" rx="18" fill="#08090f" fill-opacity="0.82"/>
+  <rect x="45" y="40" width="330" height="170" rx="18" fill="url(#glass)"/>
+  <rect x="45" y="40" width="330" height="170" rx="18" fill="url(#sheen)"/>
+  <rect x="45.5" y="40.5" width="329" height="169" rx="18" fill="none" stroke="#fff" stroke-opacity="0.1"/>
+  <path d="M63 209.2 H357" stroke="#c887ff" stroke-opacity="0.45"/>
+  <path d="M63 40.9 H357" stroke="#fff" stroke-opacity="0.28"/>
+</g><text x="73" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="44" font-weight="700" fill="url(#aurora)" text-anchor="start" letter-spacing="-1"><tspan x="73" dy="0">55–59 s</tspan></text><text x="73" y="160" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#8f97a8" text-anchor="start" letter-spacing="0"><tspan x="73" dy="0">expiry → CRE report on chain</tspan></text><g>
+  <rect x="401" y="40" width="330" height="170" rx="18" fill="#08090f" fill-opacity="0.82"/>
+  <rect x="401" y="40" width="330" height="170" rx="18" fill="url(#glass)"/>
+  <rect x="401" y="40" width="330" height="170" rx="18" fill="url(#sheen)"/>
+  <rect x="401.5" y="40.5" width="329" height="169" rx="18" fill="none" stroke="#fff" stroke-opacity="0.1"/>
+  <path d="M419 209.2 H713" stroke="#c887ff" stroke-opacity="0.45"/>
+  <path d="M419 40.9 H713" stroke="#fff" stroke-opacity="0.28"/>
+</g><text x="429" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="44" font-weight="700" fill="url(#aurora)" text-anchor="start" letter-spacing="-1"><tspan x="429" dy="0">100%</tspan></text><text x="429" y="160" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#8f97a8" text-anchor="start" letter-spacing="0"><tspan x="429" dy="0">of every payout locked up front</tspan></text><g>
+  <rect x="757" y="40" width="330" height="170" rx="18" fill="#08090f" fill-opacity="0.82"/>
+  <rect x="757" y="40" width="330" height="170" rx="18" fill="url(#glass)"/>
+  <rect x="757" y="40" width="330" height="170" rx="18" fill="url(#sheen)"/>
+  <rect x="757.5" y="40.5" width="329" height="169" rx="18" fill="none" stroke="#fff" stroke-opacity="0.1"/>
+  <path d="M775 209.2 H1069" stroke="#c887ff" stroke-opacity="0.45"/>
+  <path d="M775 40.9 H1069" stroke="#fff" stroke-opacity="0.28"/>
+</g><text x="785" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="44" font-weight="700" fill="url(#aurora)" text-anchor="start" letter-spacing="-1"><tspan x="785" dy="0">20 = 20</tspan></text><text x="785" y="160" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#8f97a8" text-anchor="start" letter-spacing="0"><tspan x="785" dy="0">AUSD in and out, per live series</tspan></text><g>
+  <rect x="1113" y="40" width="330" height="170" rx="18" fill="#08090f" fill-opacity="0.82"/>
+  <rect x="1113" y="40" width="330" height="170" rx="18" fill="url(#glass)"/>
+  <rect x="1113" y="40" width="330" height="170" rx="18" fill="url(#sheen)"/>
+  <rect x="1113.5" y="40.5" width="329" height="169" rx="18" fill="none" stroke="#fff" stroke-opacity="0.1"/>
+  <path d="M1131 209.2 H1425" stroke="#c887ff" stroke-opacity="0.45"/>
+  <path d="M1131 40.9 H1425" stroke="#fff" stroke-opacity="0.28"/>
+</g><text x="1141" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="44" font-weight="700" fill="url(#aurora)" text-anchor="start" letter-spacing="-1"><tspan x="1141" dy="0">~0.3 s</tspan></text><text x="1141" y="160" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#8f97a8" text-anchor="start" letter-spacing="0"><tspan x="1141" dy="0">Monad block time</tspan></text><text x="1450" y="238" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#5affc8" text-anchor="end" letter-spacing="1.5"><tspan x="1450" dy="0">measured on Monad testnet · chain 10143</tspan></text></svg>

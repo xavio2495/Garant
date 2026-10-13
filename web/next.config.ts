@@ -14,6 +14,14 @@ if (existsSync(rootEnv)) {
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  async redirects() {
+    return [
+      { source: "/app", destination: "/app/cover", permanent: false },
+      { source: "/cover", destination: "/app/cover", permanent: false },
+      { source: "/underwrite", destination: "/app/underwrite", permanent: false },
+      { source: "/dashboard", destination: "/app/dashboard", permanent: false },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

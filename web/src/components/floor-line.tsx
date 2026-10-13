@@ -25,7 +25,7 @@ export function FloorLine({ floor = 62.5, className = "" }: { floor?: number; cl
       <path d={path} fill="none" stroke="var(--color-ink)" strokeWidth="1.5" strokeLinejoin="round" />
       <line x1="0" x2={w} y1={fy} y2={fy} stroke="var(--color-floor)" strokeWidth="3" strokeLinecap="round" />
       <text x="0" y={h + 14} className="fill-muted text-[10px]">
-        Rate over 30 days, illustrative. Marigold line: guaranteed ₱{floor.toFixed(2)}
+        Rate over 30 days, illustrative. Bright line: guaranteed ₱{floor.toFixed(2)}
       </text>
     </svg>
   );
