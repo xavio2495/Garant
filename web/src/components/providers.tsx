@@ -95,7 +95,7 @@ export function Providers({ children }: { children: ReactNode }) {
         defaultChain: chain,
         supportedChains: [chain],
         loginMethods: ["email", "google"],
-        appearance: { theme: "light", accentColor: "#1E6B58" },
+        appearance: { theme: "dark", accentColor: "#ffffff" },
         embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
       }}
     >

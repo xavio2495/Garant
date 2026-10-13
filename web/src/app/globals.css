@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #03042a;
-  --color-ink: #eef0ff;
-  --color-muted: #9aa2d8;
-  --color-rule: rgb(120 138 255 / 0.22);
-  --color-garant: #6d8dff;
-  --color-garant-soft: rgb(80 110 255 / 0.14);
+  --color-paper: #050505;
+  --color-ink: #ededed;
+  --color-muted: #9b9b9b;
+  --color-rule: rgb(255 255 255 / 0.13);
+  --color-garant: #ffffff;
+  --color-garant-soft: rgb(255 255 255 / 0.08);
   --color-floor: #f2b33d;
   --color-floor-soft: rgb(242 179 61 / 0.12);
   --color-alert: #ff7a6b;
-  --color-deep: #0a0d5c;
+  --color-deep: #141414;
   --font-sans: var(--font-inter);
   --font-display: var(--font-display-face);
   --font-pixel: var(--font-pixel-face);
@@ -27,17 +27,15 @@
   }
 
   body {
-    /* Electric-navy glow over a dot-matrix grid */
+    /* Black with a soft white light from above; the pixel field draws on top */
     background:
-      radial-gradient(1200px 700px at 50% -10%, rgb(40 60 255 / 0.35), transparent 70%),
-      radial-gradient(900px 600px at 100% 40%, rgb(120 60 255 / 0.12), transparent 70%),
-      radial-gradient(circle at 1px 1px, rgb(110 130 255 / 0.18) 1px, transparent 1.6px) 0 0 / 14px 14px,
-      linear-gradient(180deg, #050a6b 0%, var(--color-paper) 42%, #02031c 100%);
+      radial-gradient(1200px 700px at 50% -10%, rgb(255 255 255 / 0.09), transparent 70%),
+      linear-gradient(180deg, #0c0c0c 0%, var(--color-paper) 42%, #000 100%);
     background-attachment: fixed;
   }
 
   ::selection {
-    background: rgb(109 141 255 / 0.4);
+    background: rgb(255 255 255 / 0.25);
   }
 
   :focus-visible {
@@ -76,9 +74,9 @@
   /* Frosted panel with a thin edge that shifts through the spectrum */
   .glass {
     position: relative;
-    background: linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.015) 45%, rgb(30 40 160 / 0.12));
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.015) 45%, rgb(255 255 255 / 0.04));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.08),
       0 20px 60px -30px rgb(0 0 0 / 0.8);
@@ -125,21 +123,21 @@
     opacity: 0.5;
   }
   .btn-primary {
-    background: linear-gradient(180deg, #ffffff, #d9defc);
-    color: #070a4a;
+    background: linear-gradient(180deg, #ffffff, #d6d6d6);
+    color: #050505;
     box-shadow:
       0 0 0 1px rgb(255 255 255 / 0.6),
-      0 8px 30px -8px rgb(109 141 255 / 0.8);
+      0 8px 30px -8px rgb(255 255 255 / 0.45);
   }
   .btn-primary:not(:disabled):hover {
     transform: translateY(-1px);
     box-shadow:
       0 0 0 1px #fff,
-      0 10px 40px -6px rgb(109 141 255 / 0.95);
+      0 10px 40px -6px rgb(255 255 255 / 0.6);
   }
   .btn-glass {
     position: relative;
-    background: rgb(20 26 120 / 0.55);
+    background: rgb(22 22 22 / 0.7);
     color: var(--color-ink);
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.15),
@@ -151,7 +149,7 @@
     inset: 0;
     padding: 1.5px;
     border-radius: inherit;
-    background: linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.25) 50%, rgb(160 180 255 / 0.6));
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.2) 50%, rgb(255 255 255 / 0.55));
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -160,7 +158,7 @@
     pointer-events: none;
   }
   .btn-glass:not(:disabled):hover {
-    background: rgb(40 50 170 / 0.65);
+    background: rgb(40 40 40 / 0.8);
   }
 
   .eyebrow {
@@ -203,5 +201,23 @@
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Glass icons drift gently and catch the light */
+.glass-float {
+  animation: glass-float 6s ease-in-out infinite;
+  filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.6));
+}
+.glass-glint {
+  animation: slab-shimmer 4s ease-in-out infinite;
+}
+@keyframes glass-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg);
   }
 }

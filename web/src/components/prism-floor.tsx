@@ -61,7 +61,7 @@ export function PrismFloor({ className = "" }: { className?: string }) {
         </linearGradient>
         <linearGradient id="pf-fill" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffffff" stopOpacity="0.22" />
-          <stop offset="0.5" stopColor="#8fa4ff" stopOpacity="0.07" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.05" />
           <stop offset="1" stopColor="#2fd3ff" stopOpacity="0.18" />
         </linearGradient>
         <linearGradient id="pf-floor" x1="0" x2="1">
@@ -71,8 +71,8 @@ export function PrismFloor({ className = "" }: { className?: string }) {
           <stop offset="1" stopColor="#f2b33d" stopOpacity="0" />
         </linearGradient>
         <radialGradient id="pf-glow" cx="0.5" cy="1" r="0.6">
-          <stop offset="0" stopColor="#3d5bff" stopOpacity="0.55" />
-          <stop offset="1" stopColor="#3d5bff" stopOpacity="0" />
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </radialGradient>
         <filter id="pf-blur" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="5" />

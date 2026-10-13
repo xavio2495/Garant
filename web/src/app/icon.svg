@@ -4,7 +4,7 @@
       <stop offset="0" stop-color="#ffe14d"/><stop offset=".35" stop-color="#ff3dd4"/><stop offset=".7" stop-color="#7a5cff"/><stop offset="1" stop-color="#2fd3ff"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="8" fill="#060a52"/>
+  <rect width="32" height="32" rx="8" fill="#0a0a0a"/>
   <path d="M10 23V12.5L13.5 8.5V23M18.5 23V8.5L22 12.5V23" fill="rgba(255,255,255,.14)" stroke="url(#e)" stroke-width="1.6" stroke-linejoin="round"/>
   <path d="M6 25h20" stroke="#f2b33d" stroke-width="2.4" stroke-linecap="round"/>
 </svg>

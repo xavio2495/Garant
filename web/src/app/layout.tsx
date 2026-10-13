@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight, Silkscreen } from "next/font/google";
+import { PixelField } from "@/components/pixel-field";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -21,12 +22,13 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", images: ["/og.png"] },
 };
 
-export const viewport: Viewport = { themeColor: "#03042a" };
+export const viewport: Viewport = { themeColor: "#050505" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} ${display.variable} ${pixel.variable}`}>
-      <body className="min-h-dvh">
+      <body className="isolate min-h-dvh">
+        <PixelField />
         <Providers>{children}</Providers>
       </body>
     </html>

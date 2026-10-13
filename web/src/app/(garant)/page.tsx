@@ -1,23 +1,27 @@
 import Link from "next/link";
 import { FloorLine } from "@/components/floor-line";
+import { GlassIcon, type GlassIconKind } from "@/components/glass-icon";
 import { LiveProof } from "@/components/live-proof";
 import { PrismFloor } from "@/components/prism-floor";
 import { TesterStart } from "@/components/tester-start";
 
-const USES = [
+const USES: { href: string; title: string; body: string; icon: GlassIconKind }[] = [
   {
     href: "/partner",
     title: "Protected transfers",
+    icon: "transfer",
     body: "A money-transfer app adds one line to its checkout. The family at home is guaranteed at least ₱62.50 per dollar for 30 days. If the rate falls, the difference is paid automatically.",
   },
   {
     href: "/cover",
     title: "Rain cover for events",
+    icon: "rain",
     body: "An organiser picks a date, a place and a rainfall level. If two independent weather sources agree it rained, the cover pays out. No claim form.",
   },
   {
     href: "/underwrite",
     title: "Underwriting",
+    icon: "vault",
     body: "People holding dollars back the guarantees and earn the premium. Every payout is funded in full before anyone buys, so nothing depends on a promise.",
   },
 ];
@@ -79,7 +83,10 @@ export default function Home() {
               href={u.href}
               className="glass glass-quiet group flex min-h-72 flex-col rounded-2xl p-6 transition-transform hover:-translate-y-1"
             >
-              <span className="self-end font-pixel text-2xl text-garant">0{i + 1}</span>
+              <div className="flex items-start justify-between">
+                <GlassIcon kind={u.icon} className="size-24" />
+                <span className="font-pixel text-2xl text-muted">0{i + 1}</span>
+              </div>
               <h3 className="mt-auto font-display text-2xl font-semibold group-hover:text-garant">{u.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted">{u.body}</p>
             </Link>
