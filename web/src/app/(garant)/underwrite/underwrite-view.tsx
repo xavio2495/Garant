@@ -58,36 +58,36 @@ function Market() {
   const ref = valueToday(current, rate?.rate);
 
   return (
-    <div className="mt-12 grid gap-12 lg:grid-cols-[18rem_1fr]">
-      <nav aria-label="Open series" className="flex flex-col gap-1">
+    <div className="mt-12 grid gap-6 lg:grid-cols-[18rem_1fr] lg:gap-8">
+      <nav aria-label="Open series" className="flex flex-col gap-2 lg:sticky lg:top-24 lg:self-start">
         {open.map((s) => (
           <button
             key={s.id.toString()}
             onClick={() => setSelected(s.id.toString())}
             aria-pressed={s.id === current.id}
-            className="rounded-lg px-3 py-2 text-left hover:bg-garant-soft aria-pressed:bg-ink aria-pressed:text-paper"
+            className="glass glass-quiet rounded-xl px-4 py-3 text-left text-sm leading-snug text-muted transition hover:bg-garant-soft hover:text-ink aria-pressed:bg-garant-soft aria-pressed:text-ink aria-pressed:ring-1 aria-pressed:ring-garant"
           >
             {s.label}
           </button>
         ))}
       </nav>
 
-      <div>
-        <p className="max-w-[40rem] leading-relaxed">{terms(current)}</p>
-        <dl className="mt-6 grid max-w-xl grid-cols-2 gap-x-8 gap-y-4 border-y border-rule py-5 text-sm">
+      <div className="glass min-w-0 rounded-2xl p-6 sm:p-8">
+        <p className="max-w-[40rem] text-lg leading-relaxed">{terms(current)}</p>
+        <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-6 border-y border-rule py-6 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-muted">Reference rate</dt>
-            <dd className="mt-1 font-display text-2xl">{rate ? php(rate.rate, 3) : "–"}</dd>
-            {rate ? <dd className="text-xs text-muted">ECB, {rate.date}</dd> : null}
+            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Reference rate</dt>
+            <dd className="mt-2 font-pixel text-2xl text-ink sm:text-3xl">{rate ? php(rate.rate, 3) : "–"}</dd>
+            {rate ? <dd className="mt-1 text-xs text-muted">ECB, {rate.date}</dd> : null}
           </div>
           <div>
-            <dt className="text-muted">Payout per guarantee at that rate</dt>
-            <dd className="mt-1 font-display text-2xl">{ref === null ? "–" : usd(ref)}</dd>
-            <dd className="text-xs text-muted">A floor, not a forecast. Price above it for the time left.</dd>
+            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Payout per guarantee at that rate</dt>
+            <dd className="mt-2 font-pixel text-2xl text-floor sm:text-3xl">{ref === null ? "–" : usd(ref)}</dd>
+            <dd className="mt-1 text-xs leading-relaxed text-muted">A floor, not a forecast. Price above it for the time left.</dd>
           </div>
         </dl>
 
-        <ol className="mt-10 max-w-xl space-y-10">
+        <ol className="mt-8 divide-y divide-rule">
           <Step
             n={1}
             title="Lock dollars"
@@ -159,30 +159,30 @@ function Step({
   }
 
   return (
-    <li className="grid grid-cols-[2.5rem_1fr]">
-      <span className="font-display text-2xl text-floor">{n}</span>
-      <form onSubmit={submit}>
-        <h3 className="font-display text-xl font-medium">{title}</h3>
+    <li className="grid grid-cols-[2.75rem_1fr] gap-x-2 py-8 first:pt-0 last:pb-0 sm:grid-cols-[3.5rem_1fr]">
+      <span className="pt-1 font-pixel text-lg text-garant sm:text-xl">{String(n).padStart(2, "0")}</span>
+      <form onSubmit={submit} className="min-w-0">
+        <h3 className="font-display text-xl font-semibold tracking-tight">{title}</h3>
         <p className="mt-1 text-sm leading-relaxed text-muted">{help}</p>
         <div className="mt-4 flex flex-wrap items-end gap-4">
           {fields.map((f) => (
             <label key={f.name} className="text-sm text-muted">
               {f.label}
-              <div className="mt-1 flex items-baseline gap-1 border-b-2 border-ink pb-1 text-ink">
-                {f.unit ? <span>{f.unit}</span> : null}
+              <div className="mt-1.5 flex items-baseline gap-1 rounded-lg border border-rule bg-white/5 px-3 py-2 text-ink transition focus-within:border-garant">
+                {f.unit ? <span className="text-muted">{f.unit}</span> : null}
                 <input
                   type="number"
                   min={0}
                   step={f.step ?? 1}
                   value={values[f.name] || ""}
                   onChange={(e) => setValues({ ...values, [f.name]: Number(e.target.value) })}
-                  className="w-28 bg-transparent font-display text-2xl outline-none"
+                  className="w-24 bg-transparent font-display text-xl tabular-nums outline-none focus:border-garant"
                 />
               </div>
             </label>
           ))}
           {auth.signedIn ? (
-            <button disabled={busy || !wallet} className="rounded-full bg-ink px-5 py-2.5 text-paper disabled:opacity-40">
+            <button disabled={busy || !wallet} className="btn btn-primary">
               {busy ? `${action}…` : action}
             </button>
           ) : (
@@ -190,7 +190,7 @@ function Step({
               type="button"
               onClick={auth.signIn}
               disabled={!auth.enabled}
-              className="rounded-full border border-ink px-5 py-2.5 disabled:opacity-40"
+              className="btn btn-glass"
             >
               Sign in to {action.toLowerCase()}
             </button>

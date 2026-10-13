@@ -6,7 +6,8 @@ export const metadata: Metadata = { title: "Underwrite · Garant" };
 export default function UnderwritePage() {
   return (
     <>
-      <h1 className="max-w-2xl font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+      <p className="eyebrow">Underwrite</p>
+      <h1 className="mt-3 max-w-2xl font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
         Back the guarantees. Earn the fee.
       </h1>
       <p className="mt-4 max-w-[38rem] text-lg leading-relaxed text-muted">

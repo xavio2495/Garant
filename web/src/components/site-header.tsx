@@ -18,7 +18,7 @@ export function SiteHeader() {
   const auth = useAuth();
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-5 sm:pt-4">
-      <div className="glass mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-2 rounded-xl px-5 py-3">
+      <div className="glass mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-2 rounded-xl bg-[#070b4f]/85 px-5 py-3">
         <Link href="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight">
           <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
             <path d="M3 19.5h18" stroke="var(--color-floor)" strokeWidth="2.4" strokeLinecap="round" />
