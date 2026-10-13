@@ -75,8 +75,22 @@ export function DashboardView() {
     refetchInterval: 30_000,
   });
 
-  if (isLoading) return <p className="mt-12 text-muted">Loading figures…</p>;
-  if (!data) return <p className="mt-12 text-alert">The indexer isn&apos;t reachable. Check NEXT_PUBLIC_INDEXER_URL.</p>;
+  if (isLoading)
+    return (
+      <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3" aria-busy="true">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="glass glass-quiet h-28 animate-pulse rounded-2xl" />
+        ))}
+        <p className="col-span-full text-sm text-muted">Loading figures…</p>
+      </div>
+    );
+  if (!data)
+    return (
+      <div className="glass glass-quiet mt-12 flex items-start gap-3 rounded-2xl p-5 sm:p-6">
+        <span className="mt-1.5 size-2.5 shrink-0 rounded-full bg-alert shadow-[0_0_12px_2px_rgb(255_122_107/0.6)]" />
+        <p className="text-alert">The indexer isn&apos;t reachable. Check NEXT_PUBLIC_INDEXER_URL.</p>
+      </div>
+    );
 
   const s = data.Stats[0];
   const collateral = b(s?.minted) - b(s?.setRedeemed) - b(s?.redeemedAusd);
@@ -115,16 +129,16 @@ export function DashboardView() {
 
   return (
     <>
-      <dl className="mt-12 grid grid-cols-2 gap-x-8 gap-y-8 border-y border-rule py-8 md:grid-cols-3">
+      <dl className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
         {figures.map((f) => (
-          <div key={f.label}>
+          <div key={f.label} className="glass glass-quiet flex min-w-0 flex-col rounded-2xl p-4 sm:p-5">
             <dt className="text-sm text-muted">{f.label}</dt>
-            <dd className="mt-1 font-display text-3xl font-semibold tracking-tight">{f.value}</dd>
-            {"sub" in f ? <dd className="text-sm text-muted">{f.sub}</dd> : null}
+            <dd className="mt-auto break-words pt-3 font-pixel text-xl text-ink sm:text-3xl">{f.value}</dd>
+            {"sub" in f ? <dd className="mt-1 text-sm text-muted">{f.sub}</dd> : null}
           </div>
         ))}
       </dl>
-      <p className="mt-3 max-w-[44rem] text-xs leading-relaxed text-muted">
+      <p className="mt-4 max-w-[44rem] text-xs leading-relaxed text-muted">
         The last three figures leave out Garant demo wallets ({Object.entries(DEMO_WALLETS)
           .map(([a, name]) => `${name} ${short(a)}`)
           .join(", ")}), which made {demoTrades} demo {demoTrades === 1 ? "purchase" : "purchases"} and collected{" "}
@@ -134,60 +148,83 @@ export function DashboardView() {
           : null}
       </p>
 
-      <section className="mt-14">
-        <h2 className="font-display text-2xl font-medium">By series</h2>
+      <section className="mt-16">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">By series</h2>
         <p className="mt-2 text-sm text-muted">Every holder, including Garant demo wallets.</p>
         {series.length ? (
-          <div className="mt-4 overflow-x-auto">
+          <div className="glass mt-5 overflow-x-auto rounded-2xl">
             <table className="w-full min-w-[40rem] text-left text-sm">
-              <thead className="text-muted">
+              <thead className="text-xs uppercase tracking-wider text-muted">
                 <tr className="border-b border-rule">
-                  <th className="py-2 pr-4 font-normal">Series</th>
-                  <th className="py-2 pr-4 font-normal">State</th>
-                  <th className="py-2 pr-4 text-right font-normal">Outstanding</th>
-                  <th className="py-2 text-right font-normal">Paid out</th>
+                  <th className="px-5 py-3 font-medium">Series</th>
+                  <th className="px-5 py-3 font-medium">State</th>
+                  <th className="px-5 py-3 text-right font-medium">Outstanding</th>
+                  <th className="px-5 py-3 text-right font-medium">Paid out</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-rule">
                 {series.map((r) => (
-                  <tr key={r.id} className="border-b border-rule">
-                    <td className="py-3 pr-4">{r.label}</td>
-                    <td className="py-3 pr-4">{STATE[r.state]}</td>
-                    <td className="py-3 pr-4 text-right">{money(outstanding(r))}</td>
-                    <td className="py-3 text-right">{money(b(r.protectPaid))}</td>
+                  <tr key={r.id} className="transition-colors hover:bg-white/[0.03]">
+                    <td className="px-5 py-3.5">{r.label}</td>
+                    <td className="px-5 py-3.5">
+                      <StatePill state={r.state} />
+                    </td>
+                    <td className="px-5 py-3.5 text-right tabular-nums">{money(outstanding(r))}</td>
+                    <td className="px-5 py-3.5 text-right tabular-nums">{money(b(r.protectPaid))}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <p className="mt-3 text-muted">No series on chain yet. They appear here as soon as they&apos;re created.</p>
+          <p className="glass glass-quiet mt-5 rounded-2xl p-5 text-muted">
+            No series on chain yet. They appear here as soon as they&apos;re created.
+          </p>
         )}
       </section>
 
       <SettlementSpeed series={series} reports={[...data.WeatherReport, ...data.FxReport]} />
 
-      <section className="mt-14">
-        <h2 className="font-display text-2xl font-medium">Latest money locked</h2>
+      <section className="mt-16">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Latest money locked</h2>
         {data.Mint.length ? (
-          <ul className="mt-4 divide-y divide-rule border-y border-rule text-sm">
+          <ul className="glass mt-5 divide-y divide-rule rounded-2xl text-sm">
             {data.Mint.map((m) => (
-              <li key={m.id} className="flex flex-wrap justify-between gap-2 py-3">
-                <span>
-                  {money(b(m.amount))} into series {m.series_id} by {short(m.account)}
-                  {isDemo(m.account) ? <span className="ml-2 rounded bg-floor-soft px-1.5 py-0.5 text-xs">Garant demo wallet</span> : null}
+              <li key={m.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-5 py-3.5">
+                <span className="min-w-0">
+                  <span className="font-semibold tabular-nums">{money(b(m.amount))}</span> into series {m.series_id} by{" "}
+                  <span className="font-mono text-xs">{short(m.account)}</span>
+                  {isDemo(m.account) ? (
+                    <span className="ml-2 inline-block rounded-full bg-floor-soft px-2 py-0.5 text-xs text-floor">Garant demo wallet</span>
+                  ) : null}
                 </span>
-                <a href={explorerTx(m.txHash)} target="_blank" rel="noreferrer" className="text-garant underline underline-offset-4">
+                <a
+                  href={explorerTx(m.txHash)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-garant tabular-nums underline-offset-4 hover:underline"
+                >
                   {new Date(m.timestamp * 1000).toLocaleString("en-GB", { timeZone: "UTC" })} UTC
                 </a>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-muted">Nothing locked yet.</p>
+          <p className="glass glass-quiet mt-5 rounded-2xl p-5 text-muted">Nothing locked yet.</p>
         )}
       </section>
     </>
+  );
+}
+
+function StatePill({ state }: { state: SeriesRow["state"] }) {
+  const tone =
+    state === "OPEN" ? "bg-garant-soft text-garant" : state === "RESOLVED" ? "bg-floor-soft text-floor" : "bg-white/5 text-muted";
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}>
+      <span className="size-1.5 rounded-full bg-current" />
+      {STATE[state]}
+    </span>
   );
 }
 
@@ -199,43 +236,68 @@ function SettlementSpeed({ series, reports }: { series: SeriesRow[]; reports: Re
   if (!rows.length) return null;
 
   return (
-    <section className="mt-14">
-      <h2 className="font-display text-2xl font-medium">Settlement speed</h2>
+    <section className="mt-16">
+      <h2 className="font-display text-2xl font-semibold tracking-tight">Settlement speed</h2>
       <p className="mt-2 max-w-[40rem] text-sm leading-relaxed text-muted">
         From a series&apos; expiry, to outside data landing on chain, to the moment payouts can be collected. Weather and exchange-rate
         results wait out a review window first, so anyone can flag a bad report. The last column is how quickly
         settlement follows once that window closes.
       </p>
-      <div className="mt-4 overflow-x-auto">
+      <div className="glass mt-5 overflow-x-auto rounded-2xl">
         <table className="w-full min-w-[54rem] text-left text-sm">
-          <thead className="text-muted">
+          <thead className="text-xs uppercase tracking-wider text-muted">
             <tr className="border-b border-rule">
-              <th className="py-2 pr-4 font-normal">Series</th>
-              <th className="py-2 pr-4 text-right font-normal">Expiry to data</th>
-              <th className="py-2 pr-4 font-normal">Data on chain</th>
-              <th className="py-2 pr-4 font-normal">Review window</th>
-              <th className="py-2 pr-4 font-normal">Final</th>
-              <th className="py-2 pr-4 text-right font-normal">Data to final</th>
-              <th className="py-2 text-right font-normal">After window</th>
+              <th className="px-4 py-3 pl-5 font-medium">Series</th>
+              <th className="px-4 py-3 text-right font-medium">Expiry to data</th>
+              <th className="px-4 py-3 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-garant" />
+                  Data on chain
+                </span>
+              </th>
+              <th className="px-4 py-3 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-floor" />
+                  Review window
+                </span>
+              </th>
+              <th className="px-4 py-3 font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-ink" />
+                  Final
+                </span>
+              </th>
+              <th className="px-4 py-3 text-right font-medium">Data to final</th>
+              <th className="px-4 py-3 pr-5 text-right font-medium text-garant">After window</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-rule">
             {rows.map(({ s, r }) => {
               const dataAt = r ? r.receivedAt : Number(s.observedAt ?? 0);
               const windowEnd = r ? Number(r.finalizeAfter) : dataAt;
               const blocks = r && s.settleBlock ? s.settleBlock - r.receivedBlock : null;
               return (
-                <tr key={s.id} className="border-b border-rule align-top">
-                  <td className="py-3 pr-4">{s.label}</td>
-                  <td className="py-3 pr-4 text-right">{dataAt ? dur(Math.max(dataAt - Number(s.expiry), 0)) : "–"}</td>
-                  <td className="py-3 pr-4">
+                <tr key={s.id} className="align-top transition-colors hover:bg-white/[0.03]">
+                  <td className="px-4 py-3.5 pl-5">{s.label}</td>
+                  <td className="px-4 py-3.5 text-right tabular-nums">
+                    {dataAt ? dur(Math.max(dataAt - Number(s.expiry), 0)) : "–"}
+                  </td>
+                  <td className="border-l-2 border-garant/50 px-4 py-3.5 tabular-nums">
                     {dataAt ? clock(dataAt) : "–"}
                     <span className="block text-xs text-muted">
                       {r ? `block ${r.receivedBlock.toLocaleString()}` : "price published"}
                     </span>
                   </td>
-                  <td className="py-3 pr-4">{r ? dur(windowEnd - r.receivedAt) : "None"}</td>
-                  <td className="py-3 pr-4">
+                  <td className="px-4 py-3.5">
+                    {r ? (
+                      <span className="inline-block rounded-full bg-floor-soft px-2.5 py-0.5 text-xs font-medium text-floor tabular-nums">
+                        {dur(windowEnd - r.receivedAt)}
+                      </span>
+                    ) : (
+                      <span className="text-muted">None</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5 tabular-nums">
                     {s.resolvedAt ? (
                       <>
                         {clock(s.resolvedAt)}
@@ -245,11 +307,11 @@ function SettlementSpeed({ series, reports }: { series: SeriesRow[]; reports: Re
                       <span className="text-muted">After {clock(windowEnd)}</span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-right">
+                  <td className="px-4 py-3.5 text-right tabular-nums">
                     {s.resolvedAt && dataAt ? dur(s.resolvedAt - dataAt) : "–"}
                     {blocks !== null ? <span className="block text-xs text-muted">{blocks.toLocaleString()} blocks</span> : null}
                   </td>
-                  <td className="py-3 text-right font-medium">
+                  <td className="bg-garant-soft/60 px-4 py-3.5 pr-5 text-right font-pixel text-sm text-garant">
                     {s.resolvedAt ? dur(Math.max(s.resolvedAt - windowEnd, 0)) : "–"}
                   </td>
                 </tr>

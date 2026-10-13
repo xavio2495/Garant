@@ -69,33 +69,46 @@ const ENDPOINTS: Endpoint[] = [
 export default function ApiPage() {
   return (
     <>
-      <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Add a rate guarantee to your checkout.</h1>
+      <p className="eyebrow">Partner API</p>
+      <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Add a rate guarantee to your checkout.</h1>
       <p className="mt-4 max-w-[38rem] text-lg leading-relaxed text-muted">
         Quote, buy and check guarantees over plain HTTPS with JSON. Amounts are strings with six decimals (1000000 =
         $1.00) and exchange rates have eight. Errors return a status code and a body of the form{" "}
-        <code className="rounded bg-garant-soft px-1">{`{ "error": "…" }`}</code>.
+        <code className="rounded-md border border-rule bg-black/30 px-1.5 py-0.5 font-mono text-sm text-ink">{`{ "error": "…" }`}</code>.
       </p>
-      <div className="mt-12 divide-y divide-rule border-y border-rule">
-        {ENDPOINTS.map((e) => (
-          <section key={e.path} className="grid gap-4 py-8 lg:grid-cols-[1fr_1.2fr]">
-            <div>
-              <h2 className="break-all font-display text-lg">
-                <span className="mr-2 rounded bg-garant-soft px-2 py-0.5 text-sm text-garant">{e.method}</span>
-                {e.path}
-              </h2>
-              <p className="mt-2 max-w-[34rem] leading-relaxed text-muted">{e.does}</p>
+      <div className="mt-12 space-y-5">
+        {ENDPOINTS.map((e, i) => (
+          <section
+            key={e.path}
+            className="glass glass-quiet grid min-w-0 gap-5 rounded-2xl p-5 sm:p-6 lg:grid-cols-[1fr_1.2fr] lg:gap-8"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <span className="font-pixel text-xs text-muted">{String(i + 1).padStart(2, "0")}</span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 font-mono text-xs font-semibold tracking-wider ${
+                    e.method === "POST" ? "bg-garant-soft text-garant" : "bg-white/5 text-ink"
+                  }`}
+                >
+                  {e.method}
+                </span>
+              </div>
+              <h2 className="mt-3 break-all font-mono text-base text-ink sm:text-lg">{e.path}</h2>
+              <p className="mt-3 max-w-[34rem] text-sm leading-relaxed text-muted sm:text-base">{e.does}</p>
               {e.errors.length ? (
-                <dl className="mt-4 space-y-1 text-sm">
+                <dl className="mt-5 divide-y divide-rule border-t border-rule text-sm">
                   {e.errors.map(([code, msg]) => (
-                    <div key={msg} className="flex gap-3">
-                      <dt className="w-10 shrink-0 text-alert">{code}</dt>
-                      <dd className="text-muted">{msg}</dd>
+                    <div key={msg} className="flex gap-3 py-1.5">
+                      <dt className="w-10 shrink-0 font-mono text-alert">{code}</dt>
+                      <dd className="min-w-0 text-muted">{msg}</dd>
                     </div>
                   ))}
                 </dl>
               ) : null}
             </div>
-            <pre className="overflow-x-auto rounded-xl bg-ink p-4 text-xs leading-relaxed text-paper">{e.example}</pre>
+            <pre className="min-w-0 self-start overflow-x-auto rounded-xl border border-rule bg-black/40 p-4 font-mono text-xs leading-relaxed text-ink">
+              {e.example}
+            </pre>
           </section>
         ))}
       </div>
