@@ -36,11 +36,11 @@ export function LiveProof() {
   ];
 
   return (
-    <Link href="/dashboard" className="group mt-10 block">
+    <Link href="/dashboard" className="group mt-6 block">
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {facts.map((f) => (
-          <div key={f.label} className="border-l-2 border-floor pl-3">
-            <dd className="font-display text-xl font-medium">{f.value}</dd>
+          <div key={f.label} className="border-l border-rule pl-3">
+            <dd className="font-pixel text-xl text-ink">{f.value}</dd>
             <dt className="text-sm text-muted">{f.label}</dt>
           </div>
         ))}

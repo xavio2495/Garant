@@ -32,7 +32,7 @@ export function TesterStart() {
       title: "Sign in",
       body: auth.signedIn ? "You're signed in." : "With email, Google or a browser wallet.",
       action: !auth.signedIn && auth.enabled && (
-        <button onClick={auth.signIn} disabled={!auth.ready} className="rounded-full bg-ink px-4 py-1.5 text-sm text-paper disabled:opacity-50">
+        <button onClick={auth.signIn} disabled={!auth.ready} className="btn btn-primary px-4 py-1.5 text-xs">
           Sign in
         </button>
       ),
@@ -44,7 +44,7 @@ export function TesterStart() {
         <button
           onClick={topUp}
           disabled={state.kind === "busy"}
-          className="rounded-full bg-garant px-4 py-1.5 text-sm text-paper disabled:opacity-50"
+          className="btn btn-primary px-4 py-1.5 text-xs"
         >
           {state.kind === "busy" ? "Sending…" : "Get test funds"}
         </button>
@@ -71,14 +71,15 @@ export function TesterStart() {
   ];
 
   return (
-    <section aria-labelledby="tester-start" className="border-b border-rule py-10">
-      <h2 id="tester-start" className="font-display text-2xl font-medium">
+    <section aria-labelledby="tester-start" className="glass glass-quiet mt-16 rounded-2xl px-6 py-8 sm:px-10">
+      <p className="eyebrow">For testers</p>
+      <h2 id="tester-start" className="mt-2 font-display text-2xl font-semibold">
         Testing Garant? Start here
       </h2>
       <ol className="mt-6 grid gap-6 sm:grid-cols-3">
         {steps.map((s, i) => (
-          <li key={s.title} className="border-l-2 border-floor pl-3">
-            <p className="text-sm text-muted">Step {i + 1}</p>
+          <li key={s.title} className="border-l border-rule pl-4">
+            <p className="font-pixel text-lg text-garant">0{i + 1}</p>
             <h3 className="font-medium">{s.title}</h3>
             <p className="mt-1 text-sm leading-relaxed text-muted">{s.body}</p>
             {s.action && <div className="mt-3">{s.action}</div>}
