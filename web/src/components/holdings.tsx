@@ -31,13 +31,13 @@ export function Holdings({ title, filter }: { title: string; filter?: (s: Series
 
   return (
     <section className="mt-16">
-      <h2 className="font-display text-2xl font-medium">{title}</h2>
+      <h2 className="font-display text-2xl font-semibold tracking-tight">{title}</h2>
       {isLoading ? (
         <p className="mt-3 text-muted">Loading…</p>
       ) : rows?.length ? (
-        <div className="mt-4 overflow-x-auto">
+        <div className="glass glass-quiet mt-4 overflow-x-auto rounded-2xl px-5 py-2">
           <table className="w-full min-w-[36rem] text-left text-sm">
-            <thead className="text-muted">
+            <thead className="text-xs uppercase tracking-wider text-muted">
               <tr className="border-b border-rule">
                 <th className="py-2 pr-4 font-normal">Series</th>
                 <th className="py-2 pr-4 text-right font-normal">Guarantees</th>
@@ -99,7 +99,7 @@ function ClaimButton({ seriesId, amount }: { seriesId: bigint; amount: bigint })
             setState({ busy: false, error: (e as Error).message });
           }
         }}
-        className="rounded-full bg-ink px-4 py-1.5 text-paper disabled:opacity-40"
+        className="btn btn-primary px-4 py-1.5 text-xs"
       >
         {state.busy ? "Collecting…" : `Collect ${usd(toNum6(amount))}`}
       </button>

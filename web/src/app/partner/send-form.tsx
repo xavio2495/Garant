@@ -117,12 +117,12 @@ export function SendForm() {
       </p>
 
       {unavailable ? (
-        <p className="mt-8 rounded-2xl border-2 border-rule p-5 text-sm leading-relaxed text-muted">
+        <p className="mt-8 rounded-2xl border border-rule bg-white/5 p-5 text-sm leading-relaxed text-muted">
           Rate guarantees aren&apos;t available for this amount right now. You can still send the money without one.
         </p>
       ) : (
       <div
-        className={`mt-8 rounded-2xl border-2 p-5 transition-colors ${guarantee ? "border-floor bg-floor-soft/50" : "border-rule"}`}
+        className={`mt-8 rounded-2xl border-2 p-5 transition-colors ${guarantee ? "border-floor bg-floor-soft" : "border-rule bg-white/5"}`}
       >
         <label className="flex cursor-pointer items-start gap-4">
           <input
@@ -160,7 +160,7 @@ export function SendForm() {
       <button
         onClick={send}
         disabled={!(amount > 0) || stage.kind === "sending" || (withGuarantee && fee === null)}
-        className="mt-8 w-full rounded-full bg-ink py-4 text-lg font-medium text-paper disabled:opacity-40"
+        className="btn btn-primary mt-8 w-full py-4 text-base"
       >
         {stage.kind === "sending" ? "Sending…" : `Send ${usd(total)}`}
       </button>
