@@ -115,7 +115,8 @@ export const onCronTrigger = (runtime: Runtime<Config>): string => {
   const count: bigint = read(outcomeSeries, outcomeSeriesAbi, "seriesCount");
   let reported = 0;
 
-  for (let id = 0n; id < count && reported < MAX_REPORTS_PER_RUN && reads + READS_PER_SERIES <= MAX_READS; id++) {
+  // Newest first: recent series are the ones coming due, and the read budget would otherwise run out on old ones
+  for (let id = count - 1n; id >= 0n && reported < MAX_REPORTS_PER_RUN && reads + READS_PER_SERIES <= MAX_READS; id--) {
     const s = read(outcomeSeries, outcomeSeriesAbi, "series", [id]);
     if (s.state !== STATE_OPEN || s.expiry > now) continue;
     const resolver = s.resolver.toLowerCase();
